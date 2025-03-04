@@ -8,6 +8,7 @@ import DatePersonCard from '@/components/DatePersonCard';
 import DatePersonForm from '@/components/DatePersonForm';
 import StarRating from '@/components/StarRating';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import Image from 'next/image';
 
 export default function Home() {
   const [datePersons, setDatePersons] = useState<DatePerson[]>([]);
@@ -166,7 +167,15 @@ export default function Home() {
           ) : (
             <div className="space-y-4">
               <FaHeart className="text-primary mx-auto text-5xl heart-beat" />
-              <p className="text-gray-500">還沒有新增約會對象</p>
+              <div className="w-70 h-48 mx-auto">
+                <Image 
+                  src="/welcome.jpg" 
+                  alt="還沒有約會對象" 
+                  width={300} 
+                  height={200}
+                  className="w-full h-full"
+                />
+              </div>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white inline-flex items-center gap-2"
