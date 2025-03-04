@@ -175,7 +175,7 @@ export default function Home() {
 
       {/* 添加/编辑表单模态框 */}
       {(showAddForm || editingPerson) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <DatePersonForm
               initialData={editingPerson || undefined}
@@ -191,7 +191,7 @@ export default function Home() {
 
       {/* 查看详情模态框 */}
       {viewingPerson && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="relative">
               <button
