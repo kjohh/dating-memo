@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import GradientBackground from "@/components/GradientBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "約會備忘錄 | 記錄你的約會對象",
+  title: "哥布林小抄 | 記錄你的暈船對象",
   description: "一個有趣的約會對象記錄應用，幫助你記住每個約會對象的特質和印象",
 };
 
@@ -37,7 +38,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <GradientBackground>
+          {children}
+        </GradientBackground>
       </body>
     </html>
   );
