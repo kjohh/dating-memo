@@ -32,7 +32,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
     resolver: zodResolver(datePersonFormSchema),
     defaultValues: {
       name: initialData?.name || '',
-      age: initialData?.age ? String(initialData.age) : '',
+      age: initialData?.age ? String(initialData.age) : '' as any,
       gender: initialData?.gender || undefined,
       occupation: initialData?.occupation || '',
       contactInfo: initialData?.contactInfo || '',
@@ -40,7 +40,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       positiveTags: initialData?.positiveTags || [],
       negativeTags: initialData?.negativeTags || [],
       personalityTags: initialData?.personalityTags || [],
-      rating: initialData?.rating ? initialData.rating.toString() : '',
+      rating: initialData?.rating ? String(initialData.rating) : '' as any,
       meetChannel: initialData?.meetChannel || '',
     },
     mode: 'onChange'
@@ -226,8 +226,8 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 評分
               </label>
               <StarRating
-                rating={rating ? Number(rating) : 0}
-                onChange={(value) => setValue('rating', value.toString())}
+                rating={(rating ? Number(rating) : 0) as any}
+                onChange={(value: any) => setValue('rating', value.toString())}
               />
             </div>
           </div>

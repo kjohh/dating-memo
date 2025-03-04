@@ -37,11 +37,13 @@ export const datePersonSchema = z.object({
 // 約會對象的類型
 export type DatePerson = z.infer<typeof datePersonSchema>;
 
-// 表單數據的模式定義
+// 表單數據的模式定義 - 修改為接受字符串類型的age和rating
 export const datePersonFormSchema = datePersonSchema.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  age: true,
+  rating: true,
 }).extend({
   age: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
   rating: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
