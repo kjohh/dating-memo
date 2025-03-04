@@ -1,26 +1,81 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fff5f7;
+  --foreground: #4a1d2f;
+  --primary: #ff6b9d;
+  --primary-dark: #e84c88;
+  --secondary: #8a4fff;
+  --accent: #ffca3a;
+  --error: #ff4d6d;
+  --success: #06d6a0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-error: var(--error);
+  --color-success: var(--success);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #2d1a23;
+    --foreground: #f8e1e9;
+    --primary: #ff6b9d;
+    --primary-dark: #e84c88;
+    --secondary: #9d71ff;
+    --accent: #ffca3a;
+    --error: #ff4d6d;
+    --success: #06d6a0;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.heart-beat {
+  animation: heartbeat 1.5s infinite ease-in-out;
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(255, 107, 157, 0.15);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(255, 107, 157, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: rgba(45, 26, 35, 0.8);
+  }
 }
