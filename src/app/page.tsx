@@ -153,7 +153,7 @@ export default function Home() {
           
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white flex items-center gap-2"
+            className="btn-primary"
           >
             <FaPlus />
             <span>新增對象</span>
@@ -180,7 +180,7 @@ export default function Home() {
               </div>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white inline-flex items-center gap-2"
+                className="btn-primary"
               >
                 <FaPlus />
                 <span>新增第一個約會對象</span>

@@ -188,7 +188,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                   onClick={() => setValue('gender', '男')}
                   className={`flex-1 py-2 px-4 rounded-lg border ${
                     gender === '男'
-                      ? 'bg-primary text-white border-primary'
+                      ? 'btn-primary border-0'
                       : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
                   }`}
                 >
@@ -199,7 +199,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                   onClick={() => setValue('gender', '女')}
                   className={`flex-1 py-2 px-4 rounded-lg border ${
                     gender === '女'
-                      ? 'bg-primary text-white border-primary'
+                      ? 'btn-primary border-0'
                       : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
                   }`}
                 >
@@ -287,7 +287,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                     onClick={() => handleMeetChannelChange(channel)}
                     className={`py-2 px-3 rounded-lg border text-sm ${
                       meetChannel === channel
-                        ? 'bg-primary text-white border-primary'
+                        ? 'btn-primary border-0'
                         : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
                     }`}
                   >
@@ -360,10 +360,8 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
         <button
           type="submit"
           disabled={!isFormValid()}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-            isFormValid()
-              ? 'bg-primary hover:bg-primary-dark text-white'
-              : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+          className={`btn-primary ${
+            !isFormValid() && 'opacity-50 cursor-not-allowed'
           }`}
         >
           <FaCheck />

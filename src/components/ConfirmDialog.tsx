@@ -42,7 +42,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-error hover:bg-red-600 text-white transition-colors"
+            className="btn-primary bg-error hover:bg-red-600"
           >
             確認刪除
           </button>
