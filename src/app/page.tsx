@@ -6,6 +6,7 @@ import { DatePerson } from '@/types';
 import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } from '@/utils/storage';
 import DatePersonCard from '@/components/DatePersonCard';
 import DatePersonForm from '@/components/DatePersonForm';
+import StarRating from '@/components/StarRating';
 
 export default function Home() {
   const [datePersons, setDatePersons] = useState<DatePerson[]>([]);
@@ -80,8 +81,8 @@ export default function Home() {
       return (
         person.name.toLowerCase().includes(searchLower) ||
         (person.occupation && person.occupation.toLowerCase().includes(searchLower)) ||
-        (person.meetLocation && person.meetLocation.toLowerCase().includes(searchLower)) ||
-        [...person.positiveTags, ...person.negativeTags, ...person.personalityTags, ...person.customTags]
+        (person.meetChannel && person.meetChannel.toLowerCase().includes(searchLower)) ||
+        [...person.positiveTags, ...person.negativeTags, ...person.personalityTags]
           .some(tag => tag.toLowerCase().includes(searchLower))
       );
     })
@@ -206,58 +207,54 @@ export default function Home() {
               </h2>
               
               <div className="space-y-6">
-                {/* 基本信息 */}
+                {/* 基本資訊 */}
                 <div className="grid grid-cols-2 gap-4">
-                  {viewingPerson.age && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">年齡</h3>
-                      <p>{viewingPerson.age} 歲</p>
-                    </div>
-                  )}
-                  
-                  {viewingPerson.gender && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">性別</h3>
-                      <p>{viewingPerson.gender}</p>
-                    </div>
-                  )}
-                  
-                  {viewingPerson.occupation && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">職業</h3>
-                      <p>{viewingPerson.occupation}</p>
-                    </div>
-                  )}
-                  
-                  {viewingPerson.contactInfo && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">聯絡方式</h3>
-                      <p>{viewingPerson.contactInfo}</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* 相遇信息 */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">相遇信息</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {viewingPerson.meetDate && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">基本資訊</h3>
+                    
+                    {viewingPerson.age && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-500">日期</h4>
-                        <p>
-                          {new Intl.DateTimeFormat('zh-CN', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          }).format(viewingPerson.meetDate)}
-                        </p>
+                        <h3 className="text-sm font-medium text-gray-500">年齡</h3>
+                        <p>{viewingPerson.age} 歲</p>
                       </div>
                     )}
                     
-                    {viewingPerson.meetLocation && (
+                    {viewingPerson.gender && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-500">地點</h4>
-                        <p>{viewingPerson.meetLocation}</p>
+                        <h3 className="text-sm font-medium text-gray-500">性別</h3>
+                        <p>{viewingPerson.gender}</p>
+                      </div>
+                    )}
+                    
+                    {viewingPerson.occupation && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">職業</h3>
+                        <p>{viewingPerson.occupation}</p>
+                      </div>
+                    )}
+                    
+                    {viewingPerson.contactInfo && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">社群帳號</h3>
+                        <p>{viewingPerson.contactInfo}</p>
+                      </div>
+                    )}
+                    
+                    {viewingPerson.meetChannel && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">認識管道</h3>
+                        <p>{viewingPerson.meetChannel.includes(':') 
+                          ? viewingPerson.meetChannel.replace(':', ': ') 
+                          : viewingPerson.meetChannel}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div>
+                    {viewingPerson.rating && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">評分</h3>
+                        <StarRating rating={viewingPerson.rating} readonly />
                       </div>
                     )}
                   </div>
@@ -272,7 +269,7 @@ export default function Home() {
                       <h4 className="text-sm font-medium text-gray-500 mb-1">優點</h4>
                       <div className="flex flex-wrap gap-2">
                         {viewingPerson.positiveTags.map(tag => (
-                          <span key={tag} className="bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 px-3 py-1 rounded-full text-sm">
+                          <span key={tag} className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm">
                             {tag}
                           </span>
                         ))}
@@ -285,7 +282,7 @@ export default function Home() {
                       <h4 className="text-sm font-medium text-gray-500 mb-1">缺點</h4>
                       <div className="flex flex-wrap gap-2">
                         {viewingPerson.negativeTags.map(tag => (
-                          <span key={tag} className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full text-sm">
+                          <span key={tag} className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-3 py-1 rounded-full text-sm">
                             {tag}
                           </span>
                         ))}
@@ -294,23 +291,10 @@ export default function Home() {
                   )}
                   
                   {viewingPerson.personalityTags.length > 0 && (
-                    <div className="mb-3">
-                      <h4 className="text-sm font-medium text-gray-500 mb-1">性格</h4>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500 mb-1">性格特質</h4>
                       <div className="flex flex-wrap gap-2">
                         {viewingPerson.personalityTags.map(tag => (
-                          <span key={tag} className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {viewingPerson.customTags.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500 mb-1">自定義標籤</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {viewingPerson.customTags.map(tag => (
                           <span key={tag} className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">
                             {tag}
                           </span>

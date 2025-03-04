@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DatePersonForm as DatePersonFormType, datePersonFormSchema, PRESET_POSITIVE_TAGS, PRESET_NEGATIVE_TAGS, PRESET_PERSONALITY_TAGS } from '@/types';
 import TagSelector from './TagSelector';
 import StarRating from './StarRating';
-import { FaTimes, FaHeart, FaUser, FaMapMarkerAlt, FaTags, FaStar, FaCheck } from 'react-icons/fa';
+import { FaTimes, FaUser, FaTags, FaFileAlt, FaCheck } from 'react-icons/fa';
 
 interface DatePersonFormProps {
   initialData?: Partial<DatePersonFormType>;
@@ -13,7 +13,10 @@ interface DatePersonFormProps {
 }
 
 // 表單標籤頁
-type FormTab = '基本資訊' | '相遇資訊' | '特質標籤' | '評分和備註';
+type FormTab = '基本' | '特質' | '備註';
+
+// 認識管道選項
+type MeetChannel = '交友軟體' | '社群媒體' | '親友介紹' | '工作關係' | '其他';
 
 const DatePersonForm: React.FC<DatePersonFormProps> = ({
   initialData,
@@ -21,7 +24,10 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   onCancel
 }) => {
   // 當前標籤頁
-  const [currentTab, setCurrentTab] = useState<FormTab>('基本資訊');
+  const [currentTab, setCurrentTab] = useState<FormTab>('基本');
+  const [lastGender, setLastGender] = useState<string | undefined>(undefined);
+  const [meetChannel, setMeetChannel] = useState<MeetChannel | undefined>(undefined);
+  const [otherChannel, setOtherChannel] = useState<string>('');
   
   const { register, handleSubmit, setValue, watch, formState: { errors, isValid } } = useForm<DatePersonFormType>({
     resolver: zodResolver(datePersonFormSchema),
@@ -31,36 +37,55 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       gender: initialData?.gender || undefined,
       occupation: initialData?.occupation || '',
       contactInfo: initialData?.contactInfo || '',
-      meetDate: initialData?.meetDate ? initialData.meetDate.toISOString().split('T')[0] : '',
-      meetLocation: initialData?.meetLocation || '',
       notes: initialData?.notes || '',
       positiveTags: initialData?.positiveTags || [],
       negativeTags: initialData?.negativeTags || [],
       personalityTags: initialData?.personalityTags || [],
-      customTags: initialData?.customTags || [],
       rating: initialData?.rating ? initialData.rating.toString() : '',
-      imageUrl: initialData?.imageUrl || '',
+      meetChannel: initialData?.meetChannel || '',
     },
     mode: 'onChange'
   });
 
+  // 從 localStorage 獲取上次使用的性別
+  useEffect(() => {
+    const savedGender = localStorage.getItem('lastUsedGender');
+    if (savedGender && !initialData?.gender) {
+      setValue('gender', savedGender as any);
+      setLastGender(savedGender);
+    } else if (initialData?.gender) {
+      setLastGender(initialData.gender);
+    }
+    
+    // 設置認識管道
+    if (initialData?.meetChannel) {
+      const channelParts = initialData.meetChannel.split(':');
+      if (channelParts.length > 0) {
+        const channel = channelParts[0] as MeetChannel;
+        setMeetChannel(channel);
+        if (channel === '其他' && channelParts.length > 1) {
+          setOtherChannel(channelParts[1]);
+        }
+      }
+    }
+  }, [initialData, setValue]);
+
   const positiveTags = watch('positiveTags');
   const negativeTags = watch('negativeTags');
   const personalityTags = watch('personalityTags');
-  const customTags = watch('customTags');
+  const gender = watch('gender');
   const rating = watch('rating');
   const name = watch('name');
 
   // 標籤頁列表
-  const tabs: FormTab[] = ['基本資訊', '相遇資訊', '特質標籤', '評分和備註'];
+  const tabs: FormTab[] = ['基本', '特質', '備註'];
   
   // 獲取標籤頁圖標
   const getTabIcon = (tab: FormTab) => {
     switch (tab) {
-      case '基本資訊': return <FaUser />;
-      case '相遇資訊': return <FaMapMarkerAlt />;
-      case '特質標籤': return <FaTags />;
-      case '評分和備註': return <FaStar />;
+      case '基本': return <FaUser />;
+      case '特質': return <FaTags />;
+      case '備註': return <FaFileAlt />;
       default: return null;
     }
   };
@@ -69,9 +94,34 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   const isFormValid = () => {
     return !!name; // 至少需要填寫姓名
   };
+  
+  // 處理認識管道變更
+  const handleMeetChannelChange = (channel: MeetChannel) => {
+    setMeetChannel(channel);
+    const value = channel === '其他' && otherChannel 
+      ? `${channel}:${otherChannel}` 
+      : channel;
+    setValue('meetChannel', value);
+  };
+  
+  // 處理其他管道輸入
+  const handleOtherChannelChange = (value: string) => {
+    setOtherChannel(value);
+    setValue('meetChannel', `其他:${value}`);
+  };
+  
+  // 處理表單提交
+  const onFormSubmit = (data: DatePersonFormType) => {
+    // 保存最後使用的性別
+    if (data.gender) {
+      localStorage.setItem('lastUsedGender', data.gender);
+    }
+    
+    onSubmit(data);
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div className="relative">
         <button
           type="button"
@@ -110,7 +160,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       {/* 標籤頁內容 */}
       <div className="space-y-6">
         {/* 基本資訊 */}
-        {currentTab === '基本資訊' && (
+        {currentTab === '基本' && (
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-1">
@@ -128,114 +178,67 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="age" className="block text-sm font-medium mb-1">
-                  年齡
-                </label>
-                <input
-                  id="age"
-                  type="number"
-                  min="18"
-                  {...register('age')}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="請輸入年齡"
-                />
-                {errors.age && (
-                  <p className="text-error text-sm mt-1">{errors.age.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="gender" className="block text-sm font-medium mb-1">
-                  性別
-                </label>
-                <select
-                  id="gender"
-                  {...register('gender')}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                生理性別
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setValue('gender', '男')}
+                  className={`flex-1 py-2 px-4 rounded-lg border ${
+                    gender === '男'
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
+                  }`}
                 >
-                  <option value="">請選擇</option>
-                  <option value="男">男</option>
-                  <option value="女">女</option>
-                  <option value="其他">其他</option>
-                </select>
+                  男
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue('gender', '女')}
+                  className={`flex-1 py-2 px-4 rounded-lg border ${
+                    gender === '女'
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
+                  }`}
+                >
+                  女
+                </button>
               </div>
             </div>
 
             <div>
-              <label htmlFor="occupation" className="block text-sm font-medium mb-1">
-                職業
+              <label htmlFor="age" className="block text-sm font-medium mb-1">
+                年齡
               </label>
               <input
-                id="occupation"
-                type="text"
-                {...register('occupation')}
+                id="age"
+                type="number"
+                min="18"
+                {...register('age')}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="請輸入職業"
+                placeholder="請輸入年齡"
               />
+              {errors.age && (
+                <p className="text-error text-sm mt-1">{errors.age.message}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="contactInfo" className="block text-sm font-medium mb-1">
-                聯絡方式
+              <label className="block text-sm font-medium mb-2">
+                評分
               </label>
-              <input
-                id="contactInfo"
-                type="text"
-                {...register('contactInfo')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="電話、Line ID、IG 等"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
-                照片連結
-              </label>
-              <input
-                id="imageUrl"
-                type="text"
-                {...register('imageUrl')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="請輸入照片連結"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* 相遇資訊 */}
-        {currentTab === '相遇資訊' && (
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="meetDate" className="block text-sm font-medium mb-1">
-                相遇日期
-              </label>
-              <input
-                id="meetDate"
-                type="date"
-                {...register('meetDate')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="meetLocation" className="block text-sm font-medium mb-1">
-                相遇地點
-              </label>
-              <input
-                id="meetLocation"
-                type="text"
-                {...register('meetLocation')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="請輸入相遇地點"
+              <StarRating
+                rating={rating ? parseInt(rating, 10) : 0}
+                onChange={(value) => setValue('rating', value.toString())}
               />
             </div>
           </div>
         )}
 
         {/* 特質標籤 */}
-        {currentTab === '特質標籤' && (
+        {currentTab === '特質' && (
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium mb-2">優點</h3>
@@ -266,30 +269,67 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 tagClassName="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
               />
             </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-2">自定義標籤</h3>
-              <TagSelector
-                availableTags={[]}
-                selectedTags={customTags}
-                onChange={(tags) => setValue('customTags', tags)}
-                allowCustomTags
-                tagClassName="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-              />
-            </div>
           </div>
         )}
 
-        {/* 評分和備註 */}
-        {currentTab === '評分和備註' && (
+        {/* 備註 */}
+        {currentTab === '備註' && (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                整體評分
+                認識管道
               </label>
-              <StarRating
-                rating={rating ? parseInt(rating, 10) : 0}
-                onChange={(value) => setValue('rating', value.toString())}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+                {(['交友軟體', '社群媒體', '親友介紹', '工作關係', '其他'] as MeetChannel[]).map(channel => (
+                  <button
+                    key={channel}
+                    type="button"
+                    onClick={() => handleMeetChannelChange(channel)}
+                    className={`py-2 px-3 rounded-lg border text-sm ${
+                      meetChannel === channel
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
+                    }`}
+                  >
+                    {channel}
+                  </button>
+                ))}
+              </div>
+              
+              {meetChannel === '其他' && (
+                <input
+                  type="text"
+                  value={otherChannel}
+                  onChange={(e) => handleOtherChannelChange(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary mt-2"
+                  placeholder="請輸入其他認識管道"
+                />
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="occupation" className="block text-sm font-medium mb-1">
+                職業
+              </label>
+              <input
+                id="occupation"
+                type="text"
+                {...register('occupation')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="請輸入職業"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="contactInfo" className="block text-sm font-medium mb-1">
+                社群帳號
+              </label>
+              <input
+                id="contactInfo"
+                type="text"
+                {...register('contactInfo')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="IG、FB、Line ID 等"
               />
             </div>
 

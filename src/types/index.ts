@@ -24,15 +24,12 @@ export const datePersonSchema = z.object({
   gender: z.enum(['男', '女', '其他']).optional(),
   occupation: z.string().optional(),
   contactInfo: z.string().optional(),
-  meetDate: z.date().optional(),
-  meetLocation: z.string().optional(),
   notes: z.string().optional(),
   positiveTags: z.array(z.string()),
   negativeTags: z.array(z.string()),
   personalityTags: z.array(z.string()),
-  customTags: z.array(z.string()),
   rating: z.number().min(1).max(5).optional(),
-  imageUrl: z.string().optional(),
+  meetChannel: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -47,7 +44,6 @@ export const datePersonFormSchema = datePersonSchema.omit({
   updatedAt: true,
 }).extend({
   age: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
-  meetDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   rating: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
 });
 

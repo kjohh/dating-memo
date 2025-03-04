@@ -1,6 +1,6 @@
 import React from 'react';
 import { DatePerson } from '@/types';
-import { FaUser, FaHeart, FaHeartBroken, FaUserTag, FaCalendarAlt, FaBriefcase, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUser, FaHeart, FaHeartBroken, FaUserTag, FaBriefcase, FaLink } from 'react-icons/fa';
 import StarRating from './StarRating';
 
 interface DatePersonCardProps {
@@ -9,14 +9,14 @@ interface DatePersonCardProps {
 }
 
 const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
-  // 格式化日期
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return '未知';
-    return new Intl.DateTimeFormat('zh-TW', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
+  // 獲取認識管道
+  const getMeetChannel = () => {
+    if (!person.meetChannel) return null;
+    
+    const parts = person.meetChannel.split(':');
+    return parts[0] === '其他' && parts.length > 1 
+      ? `${parts[0]}: ${parts[1]}`
+      : parts[0];
   };
 
   // 獲取隨機漸變背景
@@ -36,6 +36,8 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
     return gradients[seed % gradients.length];
   };
 
+  const meetChannel = getMeetChannel();
+
   return (
     <div 
       className="card hover:cursor-pointer"
@@ -43,14 +45,6 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
     >
       <div className="relative overflow-hidden rounded-t-lg h-24">
         <div className={`absolute inset-0 ${getRandomGradient()} opacity-80`}></div>
-        
-        {person.imageUrl ? (
-          <img 
-            src={person.imageUrl} 
-            alt={person.name} 
-            className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
-          />
-        ) : null}
         
         <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
           <div className="flex justify-between items-end">
@@ -65,30 +59,30 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
       </div>
       
       <div className="p-4">
-        {/* 職業 */}
-        {person.occupation && (
-          <div className="flex items-center text-sm mb-2">
-            <FaBriefcase className="text-primary mr-2" />
-            <span className="truncate">{person.occupation}</span>
-          </div>
-        )}
-        
-        {/* 相遇日期和地點 */}
+        {/* 職業和認識管道 */}
         <div className="flex flex-wrap text-sm mb-3">
-          {person.meetDate && (
+          {person.occupation && (
             <div className="flex items-center mr-4 mb-1">
-              <FaCalendarAlt className="text-secondary mr-1" />
-              <span>{formatDate(person.meetDate)}</span>
+              <FaBriefcase className="text-primary mr-1" />
+              <span className="truncate">{person.occupation}</span>
             </div>
           )}
           
-          {person.meetLocation && (
+          {meetChannel && (
             <div className="flex items-center mb-1">
-              <FaMapMarkerAlt className="text-error mr-1" />
-              <span className="truncate">{person.meetLocation}</span>
+              <FaLink className="text-secondary mr-1" />
+              <span className="truncate">{meetChannel}</span>
             </div>
           )}
         </div>
+        
+        {/* 社群帳號 */}
+        {person.contactInfo && (
+          <div className="flex items-center text-sm mb-3">
+            <FaUser className="text-gray-500 mr-1" />
+            <span className="truncate">{person.contactInfo}</span>
+          </div>
+        )}
         
         {/* 標籤 */}
         <div className="space-y-2">
