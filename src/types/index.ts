@@ -1,26 +1,26 @@
 import { z } from 'zod';
 
-// 预设的标签
+// 預設的標籤
 export const PRESET_POSITIVE_TAGS = [
-  '幽默', '聪明', '善良', '体贴', '有趣', '有责任心', '浪漫', '有上进心',
-  '有爱心', '会做饭', '会聆听', '有耐心', '有主见', '有才艺', '会照顾人'
+  '幽默', '聰明', '善良', '體貼', '有趣', '有責任心', '浪漫', '有上進心',
+  '有愛心', '會做飯', '會聆聽', '有耐心', '有主見', '有才藝', '會照顧人'
 ];
 
 export const PRESET_NEGATIVE_TAGS = [
-  '粗心', '脾气差', '不守时', '爱抱怨', '小气', '自私', '不体贴', '懒惰',
-  '爱玩手机', '不会沟通', '缺乏责任感', '拖延症', '爱占小便宜', '不尊重人'
+  '粗心', '脾氣差', '不守時', '愛抱怨', '小氣', '自私', '不體貼', '懶惰',
+  '愛玩手機', '不會溝通', '缺乏責任感', '拖延症', '愛佔小便宜', '不尊重人'
 ];
 
 export const PRESET_PERSONALITY_TAGS = [
-  '内向', '外向', '理性', '感性', '乐观', '悲观', '冒险', '保守',
-  '完美主义', '随性', '独立', '依赖', '务实', '理想主义', '领导型', '跟随型'
+  '內向', '外向', '理性', '感性', '樂觀', '悲觀', '冒險', '保守',
+  '完美主義', '隨性', '獨立', '依賴', '務實', '理想主義', '領導型', '跟隨型'
 ];
 
-// 约会对象的模式定义
+// 約會對象的模式定義
 export const datePersonSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, '名字不能为空'),
-  age: z.number().min(18, '年龄必须大于或等于18岁').optional(),
+  name: z.string().min(1, '姓名不能為空'),
+  age: z.number().min(18, '年齡必須大於或等於18歲').optional(),
   gender: z.enum(['男', '女', '其他']).optional(),
   occupation: z.string().optional(),
   contactInfo: z.string().optional(),
@@ -37,10 +37,10 @@ export const datePersonSchema = z.object({
   updatedAt: z.date(),
 });
 
-// 约会对象的类型
+// 約會對象的類型
 export type DatePerson = z.infer<typeof datePersonSchema>;
 
-// 表单数据的模式定义
+// 表單數據的模式定義
 export const datePersonFormSchema = datePersonSchema.omit({
   id: true,
   createdAt: true,
@@ -51,5 +51,5 @@ export const datePersonFormSchema = datePersonSchema.omit({
   rating: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
 });
 
-// 表单数据的类型
+// 表單數據的類型
 export type DatePersonForm = z.infer<typeof datePersonFormSchema>; 

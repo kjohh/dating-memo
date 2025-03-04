@@ -12,14 +12,14 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
   // 格式化日期
   const formatDate = (date: Date | undefined) => {
     if (!date) return '未知';
-    return new Intl.DateTimeFormat('zh-CN', {
+    return new Intl.DateTimeFormat('zh-TW', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     }).format(date);
   };
 
-  // 获取随机渐变背景
+  // 獲取隨機漸變背景
   const getRandomGradient = () => {
     const gradients = [
       'bg-gradient-to-r from-pink-400 to-purple-500',
@@ -31,7 +31,7 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
       'bg-gradient-to-r from-orange-400 to-pink-500',
     ];
     
-    // 使用名字的字符码总和作为种子，确保同一个人总是得到相同的渐变
+    // 使用姓名的字符碼總和作為種子，確保同一個人總是得到相同的漸變
     const seed = person.name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
     return gradients[seed % gradients.length];
   };
@@ -58,14 +58,14 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
             {person.rating && <StarRating rating={person.rating} readonly size={16} />}
           </div>
           <div className="flex items-center text-sm opacity-90">
-            {person.age && <span className="mr-2">{person.age}岁</span>}
+            {person.age && <span className="mr-2">{person.age}歲</span>}
             {person.gender && <span>{person.gender}</span>}
           </div>
         </div>
       </div>
       
       <div className="p-4">
-        {/* 职业 */}
+        {/* 職業 */}
         {person.occupation && (
           <div className="flex items-center text-sm mb-2">
             <FaBriefcase className="text-primary mr-2" />
@@ -73,7 +73,7 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
           </div>
         )}
         
-        {/* 相遇日期和地点 */}
+        {/* 相遇日期和地點 */}
         <div className="flex flex-wrap text-sm mb-3">
           {person.meetDate && (
             <div className="flex items-center mr-4 mb-1">
@@ -90,9 +90,9 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
           )}
         </div>
         
-        {/* 标签 */}
+        {/* 標籤 */}
         <div className="space-y-2">
-          {/* 优点标签 */}
+          {/* 優點標籤 */}
           {person.positiveTags.length > 0 && (
             <div className="flex items-start">
               <FaHeart className="text-error mt-1 mr-2 flex-shrink-0" />
@@ -109,7 +109,7 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
             </div>
           )}
           
-          {/* 缺点标签 */}
+          {/* 缺點標籤 */}
           {person.negativeTags.length > 0 && (
             <div className="flex items-start">
               <FaHeartBroken className="text-gray-500 mt-1 mr-2 flex-shrink-0" />
@@ -126,7 +126,7 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
             </div>
           )}
           
-          {/* 性格标签 */}
+          {/* 性格標籤 */}
           {person.personalityTags.length > 0 && (
             <div className="flex items-start">
               <FaUserTag className="text-secondary mt-1 mr-2 flex-shrink-0" />

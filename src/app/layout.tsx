@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "约会备忘录 | 记录你的约会对象",
-  description: "一个有趣的约会对象记录应用，帮助你记住每个约会对象的特质和印象",
+  title: "約會備忘錄 | 記錄你的約會對象",
+  description: "一個有趣的約會對象記錄應用，幫助你記住每個約會對象的特質和印象",
 };
 
 export const viewport: Viewport = {

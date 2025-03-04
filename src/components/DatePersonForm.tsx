@@ -12,33 +12,33 @@ interface DatePersonFormProps {
   onCancel: () => void;
 }
 
-// 表单标签页
-type FormTab = '基本信息' | '相遇信息' | '特质标签' | '评分和备注';
+// 表單標籤頁
+type FormTab = '基本資訊' | '相遇資訊' | '特質標籤' | '評分和備註';
 
 const DatePersonForm: React.FC<DatePersonFormProps> = ({
   initialData,
   onSubmit,
   onCancel
 }) => {
-  // 当前标签页
-  const [currentTab, setCurrentTab] = useState<FormTab>('基本信息');
+  // 當前標籤頁
+  const [currentTab, setCurrentTab] = useState<FormTab>('基本資訊');
   
   const { register, handleSubmit, setValue, watch, formState: { errors, isValid } } = useForm<DatePersonFormType>({
     resolver: zodResolver(datePersonFormSchema),
     defaultValues: {
       name: initialData?.name || '',
-      age: initialData?.age || '',
+      age: initialData?.age ? initialData.age.toString() : '',
       gender: initialData?.gender || undefined,
       occupation: initialData?.occupation || '',
       contactInfo: initialData?.contactInfo || '',
-      meetDate: initialData?.meetDate || '',
+      meetDate: initialData?.meetDate ? initialData.meetDate.toISOString().split('T')[0] : '',
       meetLocation: initialData?.meetLocation || '',
       notes: initialData?.notes || '',
       positiveTags: initialData?.positiveTags || [],
       negativeTags: initialData?.negativeTags || [],
       personalityTags: initialData?.personalityTags || [],
       customTags: initialData?.customTags || [],
-      rating: initialData?.rating || '',
+      rating: initialData?.rating ? initialData.rating.toString() : '',
       imageUrl: initialData?.imageUrl || '',
     },
     mode: 'onChange'
@@ -51,23 +51,23 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   const rating = watch('rating');
   const name = watch('name');
 
-  // 标签页列表
-  const tabs: FormTab[] = ['基本信息', '相遇信息', '特质标签', '评分和备注'];
+  // 標籤頁列表
+  const tabs: FormTab[] = ['基本資訊', '相遇資訊', '特質標籤', '評分和備註'];
   
-  // 获取标签页图标
+  // 獲取標籤頁圖標
   const getTabIcon = (tab: FormTab) => {
     switch (tab) {
-      case '基本信息': return <FaUser />;
-      case '相遇信息': return <FaMapMarkerAlt />;
-      case '特质标签': return <FaTags />;
-      case '评分和备注': return <FaStar />;
+      case '基本資訊': return <FaUser />;
+      case '相遇資訊': return <FaMapMarkerAlt />;
+      case '特質標籤': return <FaTags />;
+      case '評分和備註': return <FaStar />;
       default: return null;
     }
   };
 
-  // 检查表单是否有效
+  // 檢查表單是否有效
   const isFormValid = () => {
-    return !!name; // 至少需要填写名字
+    return !!name; // 至少需要填寫姓名
   };
 
   return (
@@ -77,17 +77,17 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
           type="button"
           onClick={onCancel}
           className="absolute right-0 top-0 p-2 text-gray-500 hover:text-error"
-          aria-label="关闭"
+          aria-label="關閉"
         >
           <FaTimes size={20} />
         </button>
         
         <h2 className="text-2xl font-bold mb-6 gradient-text">
-          {initialData?.name ? `编辑 ${initialData.name} 的资料` : '添加新的约会对象'}
+          {initialData?.name ? `編輯 ${initialData.name} 的資料` : '新增約會對象'}
         </h2>
       </div>
 
-      {/* 标签页导航 */}
+      {/* 標籤頁導航 */}
       <div className="flex flex-wrap border-b border-gray-300 dark:border-gray-700 mb-6">
         {tabs.map((tab) => (
           <button
@@ -99,6 +99,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 ? 'text-primary border-b-2 border-primary -mb-px' 
                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
+            style={{ width: `${100 / tabs.length}%` }}
           >
             {getTabIcon(tab)}
             <span>{tab}</span>
@@ -106,196 +107,209 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
         ))}
       </div>
 
-      {/* 基本信息标签页 */}
-      {currentTab === '基本信息' && (
-        <div className="space-y-4 animate-fadeIn">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">
-              姓名 <span className="text-error">*</span>
-            </label>
-            <input
-              id="name"
-              type="text"
-              {...register('name')}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="输入姓名..."
-            />
-            {errors.name && (
-              <p className="text-error text-xs mt-1">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+      {/* 標籤頁內容 */}
+      <div className="space-y-6">
+        {/* 基本資訊 */}
+        {currentTab === '基本資訊' && (
+          <div className="space-y-4">
             <div>
-              <label htmlFor="age" className="block text-sm font-medium mb-1">
-                年龄
+              <label htmlFor="name" className="block text-sm font-medium mb-1">
+                姓名 <span className="text-error">*</span>
               </label>
               <input
-                id="age"
-                type="number"
-                min="18"
-                {...register('age')}
+                id="name"
+                type="text"
+                {...register('name')}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="输入年龄..."
+                placeholder="請輸入姓名"
               />
-              {errors.age && (
-                <p className="text-error text-xs mt-1">{errors.age.message}</p>
+              {errors.name && (
+                <p className="text-error text-sm mt-1">{errors.name.message}</p>
               )}
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="age" className="block text-sm font-medium mb-1">
+                  年齡
+                </label>
+                <input
+                  id="age"
+                  type="number"
+                  min="18"
+                  {...register('age')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="請輸入年齡"
+                />
+                {errors.age && (
+                  <p className="text-error text-sm mt-1">{errors.age.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="gender" className="block text-sm font-medium mb-1">
+                  性別
+                </label>
+                <select
+                  id="gender"
+                  {...register('gender')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">請選擇</option>
+                  <option value="男">男</option>
+                  <option value="女">女</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+            </div>
+
             <div>
-              <label htmlFor="gender" className="block text-sm font-medium mb-1">
-                性别
+              <label htmlFor="occupation" className="block text-sm font-medium mb-1">
+                職業
               </label>
-              <select
-                id="gender"
-                {...register('gender')}
+              <input
+                id="occupation"
+                type="text"
+                {...register('occupation')}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">选择性别...</option>
-                <option value="男">男</option>
-                <option value="女">女</option>
-                <option value="其他">其他</option>
-              </select>
+                placeholder="請輸入職業"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="contactInfo" className="block text-sm font-medium mb-1">
+                聯絡方式
+              </label>
+              <input
+                id="contactInfo"
+                type="text"
+                {...register('contactInfo')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="電話、Line ID、IG 等"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
+                照片連結
+              </label>
+              <input
+                id="imageUrl"
+                type="text"
+                {...register('imageUrl')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="請輸入照片連結"
+              />
             </div>
           </div>
+        )}
 
-          <div>
-            <label htmlFor="occupation" className="block text-sm font-medium mb-1">
-              职业
-            </label>
-            <input
-              id="occupation"
-              type="text"
-              {...register('occupation')}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="输入职业..."
-            />
+        {/* 相遇資訊 */}
+        {currentTab === '相遇資訊' && (
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="meetDate" className="block text-sm font-medium mb-1">
+                相遇日期
+              </label>
+              <input
+                id="meetDate"
+                type="date"
+                {...register('meetDate')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="meetLocation" className="block text-sm font-medium mb-1">
+                相遇地點
+              </label>
+              <input
+                id="meetLocation"
+                type="text"
+                {...register('meetLocation')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="請輸入相遇地點"
+              />
+            </div>
           </div>
+        )}
 
-          <div>
-            <label htmlFor="contactInfo" className="block text-sm font-medium mb-1">
-              联系方式
-            </label>
-            <input
-              id="contactInfo"
-              type="text"
-              {...register('contactInfo')}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="输入联系方式..."
-            />
+        {/* 特質標籤 */}
+        {currentTab === '特質標籤' && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium mb-2">優點</h3>
+              <TagSelector
+                availableTags={PRESET_POSITIVE_TAGS}
+                selectedTags={positiveTags}
+                onChange={(tags) => setValue('positiveTags', tags)}
+                tagClassName="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-2">缺點</h3>
+              <TagSelector
+                availableTags={PRESET_NEGATIVE_TAGS}
+                selectedTags={negativeTags}
+                onChange={(tags) => setValue('negativeTags', tags)}
+                tagClassName="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-2">性格特質</h3>
+              <TagSelector
+                availableTags={PRESET_PERSONALITY_TAGS}
+                selectedTags={personalityTags}
+                onChange={(tags) => setValue('personalityTags', tags)}
+                tagClassName="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-2">自定義標籤</h3>
+              <TagSelector
+                availableTags={[]}
+                selectedTags={customTags}
+                onChange={(tags) => setValue('customTags', tags)}
+                allowCustomTags
+                tagClassName="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+              />
+            </div>
           </div>
+        )}
 
-          <div>
-            <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
-              头像图片URL
-            </label>
-            <input
-              id="imageUrl"
-              type="text"
-              {...register('imageUrl')}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="输入图片URL..."
-            />
+        {/* 評分和備註 */}
+        {currentTab === '評分和備註' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                整體評分
+              </label>
+              <StarRating
+                rating={rating ? parseInt(rating, 10) : 0}
+                onChange={(value) => setValue('rating', value.toString())}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="notes" className="block text-sm font-medium mb-1">
+                備註
+              </label>
+              <textarea
+                id="notes"
+                {...register('notes')}
+                rows={6}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="記錄你的印象、感受或其他重要資訊..."
+              ></textarea>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* 相遇信息标签页 */}
-      {currentTab === '相遇信息' && (
-        <div className="space-y-4 animate-fadeIn">
-          <div>
-            <label htmlFor="meetDate" className="block text-sm font-medium mb-1">
-              相遇日期
-            </label>
-            <input
-              id="meetDate"
-              type="date"
-              {...register('meetDate')}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="meetLocation" className="block text-sm font-medium mb-1">
-              相遇地点
-            </label>
-            <input
-              id="meetLocation"
-              type="text"
-              {...register('meetLocation')}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="输入地点..."
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 特质标签标签页 */}
-      {currentTab === '特质标签' && (
-        <div className="space-y-4 animate-fadeIn">
-          <TagSelector
-            title="优点标签"
-            presetTags={PRESET_POSITIVE_TAGS}
-            selectedTags={positiveTags}
-            onChange={(tags) => setValue('positiveTags', tags)}
-            tagColorClass="bg-pink-500"
-          />
-          
-          <TagSelector
-            title="缺点标签"
-            presetTags={PRESET_NEGATIVE_TAGS}
-            selectedTags={negativeTags}
-            onChange={(tags) => setValue('negativeTags', tags)}
-            tagColorClass="bg-gray-500"
-          />
-          
-          <TagSelector
-            title="性格标签"
-            presetTags={PRESET_PERSONALITY_TAGS}
-            selectedTags={personalityTags}
-            onChange={(tags) => setValue('personalityTags', tags)}
-            tagColorClass="bg-purple-500"
-          />
-          
-          <TagSelector
-            title="自定义标签"
-            presetTags={[]}
-            selectedTags={customTags}
-            onChange={(tags) => setValue('customTags', tags)}
-            tagColorClass="bg-blue-500"
-          />
-        </div>
-      )}
-
-      {/* 评分和备注标签页 */}
-      {currentTab === '评分和备注' && (
-        <div className="space-y-4 animate-fadeIn">
-          <div>
-            <h3 className="text-lg font-semibold mb-2">总体评分</h3>
-            <StarRating
-              rating={rating ? Number(rating) : 0}
-              onChange={(value) => setValue('rating', String(value))}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="notes" className="block text-lg font-semibold mb-2">
-              备注
-            </label>
-            <textarea
-              id="notes"
-              {...register('notes')}
-              rows={4}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="添加一些备注..."
-            ></textarea>
-          </div>
-        </div>
-      )}
-
-      {/* 提交按钮 */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-300 dark:border-gray-700 mt-6">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
         <button
           type="button"
           onClick={onCancel}
@@ -303,14 +317,17 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
         >
           取消
         </button>
-        
         <button
           type="submit"
           disabled={!isFormValid()}
-          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+            isFormValid()
+              ? 'bg-primary hover:bg-primary-dark text-white'
+              : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+          }`}
         >
-          <FaHeart className="heart-beat" />
-          <span>{initialData?.name ? '保存修改' : '添加约会对象'}</span>
+          <FaCheck />
+          <span>儲存</span>
         </button>
       </div>
     </form>
