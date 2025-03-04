@@ -14,7 +14,11 @@ export const getAllDatePersons = (): DatePerson[] => {
     const parsedData = JSON.parse(data);
     
     // 转换日期字符串为Date对象
-    return parsedData.map((person: any) => ({
+    return parsedData.map((person: Omit<DatePerson, 'meetDate' | 'createdAt' | 'updatedAt'> & {
+      meetDate?: string;
+      createdAt: string;
+      updatedAt: string;
+    }) => ({
       ...person,
       meetDate: person.meetDate ? new Date(person.meetDate) : undefined,
       createdAt: new Date(person.createdAt),

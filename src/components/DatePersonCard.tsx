@@ -1,7 +1,6 @@
 import React from 'react';
 import { DatePerson } from '@/types';
-import { FaUser, FaBriefcase, FaLink, FaStar, FaSmile, FaBrain } from 'react-icons/fa';
-import StarRating from './StarRating';
+import { FaStar } from 'react-icons/fa';
 
 interface DatePersonCardProps {
   person: DatePerson;

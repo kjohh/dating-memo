@@ -25,15 +25,14 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
 }) => {
   // 當前標籤頁
   const [currentTab, setCurrentTab] = useState<FormTab>('基本');
-  const [lastGender, setLastGender] = useState<string | undefined>(undefined);
   const [meetChannel, setMeetChannel] = useState<MeetChannel | undefined>(undefined);
   const [otherChannel, setOtherChannel] = useState<string>('');
   
-  const { register, handleSubmit, setValue, watch, formState: { errors, isValid } } = useForm<DatePersonFormType>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<DatePersonFormType>({
     resolver: zodResolver(datePersonFormSchema),
     defaultValues: {
       name: initialData?.name || '',
-      age: initialData?.age ? initialData.age.toString() : '',
+      age: initialData?.age ? String(initialData.age) : '',
       gender: initialData?.gender || undefined,
       occupation: initialData?.occupation || '',
       contactInfo: initialData?.contactInfo || '',
@@ -51,10 +50,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   useEffect(() => {
     const savedGender = localStorage.getItem('lastUsedGender');
     if (savedGender && !initialData?.gender) {
-      setValue('gender', savedGender as any);
-      setLastGender(savedGender);
-    } else if (initialData?.gender) {
-      setLastGender(initialData.gender);
+      setValue('gender', savedGender as "男" | "女" | "其他");
     }
     
     // 設置認識管道
@@ -230,7 +226,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 評分
               </label>
               <StarRating
-                rating={rating ? parseInt(rating, 10) : 0}
+                rating={rating ? Number(rating) : 0}
                 onChange={(value) => setValue('rating', value.toString())}
               />
             </div>

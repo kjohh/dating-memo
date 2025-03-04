@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaPlus, FaTimes } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
 
 interface TagSelectorProps {
   title?: string;

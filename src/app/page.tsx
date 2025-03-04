@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaTimes } from 'react-icons/fa';
-import { DatePerson } from '@/types';
+import { DatePerson, DatePersonForm as DatePersonFormData } from '@/types';
 import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } from '@/utils/storage';
 import DatePersonCard from '@/components/DatePersonCard';
 import DatePersonForm from '@/components/DatePersonForm';
@@ -38,13 +38,12 @@ export default function Home() {
   }, []);
 
   // 處理添加新約會對象
-  const handleAddPerson = (data: any) => {
+  const handleAddPerson = (data: DatePersonFormData) => {
     addDatePerson({
       ...data,
       positiveTags: data.positiveTags || [],
       negativeTags: data.negativeTags || [],
       personalityTags: data.personalityTags || [],
-      customTags: data.customTags || [],
     });
     
     setShowAddForm(false);
@@ -52,14 +51,13 @@ export default function Home() {
   };
 
   // 處理更新約會對象
-  const handleUpdatePerson = (data: any) => {
+  const handleUpdatePerson = (data: DatePersonFormData) => {
     if (editingPerson) {
       updateDatePerson(editingPerson.id, {
         ...data,
         positiveTags: data.positiveTags || [],
         negativeTags: data.negativeTags || [],
         personalityTags: data.personalityTags || [],
-        customTags: data.customTags || [],
       });
       
       setEditingPerson(null);
