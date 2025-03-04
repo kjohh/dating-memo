@@ -30,9 +30,9 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({ children }) => 
             cDistance={20}
             cPolarAngle={90}
             cAzimuthAngle={180}
-            cameraZoom={1.2}
+            cameraZoom={0.1}
             lightType="3d"
-            envPreset="city"
+            // envPreset="city"
             grain="on"
             zoomOut={true}
             uSpeed={0.2}
@@ -53,7 +53,7 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({ children }) => 
       </div>
       
       {/* 半透明覆蓋層，提高內容可讀性 */}
-      <div className="fixed inset-0 bg-background/90 backdrop-blur-[2px] -z-10"></div>
+      <div className="fixed inset-0 bg-background/60 -z-10"></div>
       
       {/* 內容 */}
       <div className="relative z-0">
