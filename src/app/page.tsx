@@ -113,10 +113,10 @@ export default function Home() {
       {/* 頭部 */}
       <header className="mb-8 text-center">
         <h1 className="text-4xl font-bold mb-2 gradient-text inline-block">
-          約會備忘錄
+          哥布林小抄
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          記錄你的約會對象，不錯過每一個心動瞬間
+          記錄你的暈船對象，不放過每一個心動瞬間
         </p>
       </header>
 

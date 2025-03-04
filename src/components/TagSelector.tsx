@@ -120,17 +120,9 @@ const TagSelector: React.FC<TagSelectorProps> = ({
             onChange={(e) => setCustomTag(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="新增自定義標籤..."
-            className="flex-1 px-3 py-2 rounded-l-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
             maxLength={15}
           />
-          <button
-            type="button"
-            onClick={handleAddCustomTag}
-            disabled={!customTag.trim()}
-            className="px-3 py-2 rounded-r-lg bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FaPlus />
-          </button>
         </div>
       )}
       
