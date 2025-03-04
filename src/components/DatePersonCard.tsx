@@ -1,6 +1,6 @@
 import React from 'react';
 import { DatePerson } from '@/types';
-import { FaUser, FaHeart, FaHeartBroken, FaUserTag, FaBriefcase, FaLink } from 'react-icons/fa';
+import { FaUser, FaBriefcase, FaLink, FaStar, FaSmile, FaBrain } from 'react-icons/fa';
 import StarRating from './StarRating';
 
 interface DatePersonCardProps {
@@ -19,123 +19,128 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
       : parts[0];
   };
 
-  // 獲取隨機漸變背景
-  const getRandomGradient = () => {
-    const gradients = [
-      'bg-gradient-to-r from-pink-400 to-purple-500',
-      'bg-gradient-to-r from-purple-400 to-indigo-500',
-      'bg-gradient-to-r from-indigo-400 to-cyan-500',
-      'bg-gradient-to-r from-cyan-400 to-emerald-500',
-      'bg-gradient-to-r from-emerald-400 to-yellow-500',
-      'bg-gradient-to-r from-yellow-400 to-orange-500',
-      'bg-gradient-to-r from-orange-400 to-pink-500',
+  // 獲取隨機背景色
+  const getRandomColor = () => {
+    const colors = [
+      'bg-accent',
+      'bg-secondary',
+      'bg-emerald-200',
+      'bg-sky-200',
+      'bg-indigo-200',
+      'bg-rose-200',
     ];
     
-    // 使用姓名的字符碼總和作為種子，確保同一個人總是得到相同的漸變
+    // 使用姓名的字符碼總和作為種子，確保同一個人總是得到相同的顏色
     const seed = person.name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    return gradients[seed % gradients.length];
+    return colors[seed % colors.length];
+  };
+
+  // 獲取幽默的標題前綴
+  const getHumorousPrefix = () => {
+    const prefixes = ['戀愛候選人', '心動對象', '緣分之人', '靈魂伴侶', '約會高手', '愛情冒險家'];
+    const seed = person.name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return prefixes[seed % prefixes.length];
   };
 
   const meetChannel = getMeetChannel();
+  const prefix = getHumorousPrefix();
+  const randomColor = getRandomColor();
 
   return (
     <div 
-      className="card hover:cursor-pointer"
+      className="card hover:cursor-pointer group"
       onClick={onClick}
     >
-      <div className="relative overflow-hidden rounded-t-lg h-24">
-        <div className={`absolute inset-0 ${getRandomGradient()} opacity-80`}></div>
-        
-        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-          <div className="flex justify-between items-end">
-            <h3 className="text-xl font-bold truncate">{person.name}</h3>
-            {person.rating && <StarRating rating={person.rating} readonly size={16} />}
+      <div className="p-6 flex flex-col h-full">
+        {/* 頂部區域 */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-xl font-bold">{person.name}</h3>
+            {person.rating && (
+              <div className="text-sm font-medium">
+                {person.rating}.0
+              </div>
+            )}
           </div>
-          <div className="flex items-center text-sm opacity-90">
-            {person.age && <span className="mr-2">{person.age}歲</span>}
-            {person.gender && <span>{person.gender}</span>}
+          <p className="text-xs text-muted-text">{prefix}</p>
+        </div>
+        
+        {/* 主要資訊區 */}
+        <div className="flex-grow">
+          {/* 基本資訊 */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {person.age && (
+              <div className="text-sm px-3 py-1 rounded-full bg-tag-bg text-tag-text">
+                {person.age}歲
+              </div>
+            )}
+            {person.gender && (
+              <div className="text-sm px-3 py-1 rounded-full bg-tag-bg text-tag-text">
+                {person.gender}
+              </div>
+            )}
+            {person.occupation && (
+              <div className="text-sm px-3 py-1 rounded-full bg-tag-bg text-tag-text">
+                {person.occupation}
+              </div>
+            )}
+          </div>
+          
+          {/* 標籤區域 */}
+          <div className="space-y-3">
+            {/* 優點標籤 */}
+            {person.positiveTags.length > 0 && (
+              <div>
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 rounded-full bg-secondary mr-2"></div>
+                  <span className="text-sm font-medium">優點</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {person.positiveTags.slice(0, 3).map(tag => (
+                    <span key={tag} className="text-xs px-2 py-1 rounded-full bg-tag-bg text-tag-text">
+                      {tag}
+                    </span>
+                  ))}
+                  {person.positiveTags.length > 3 && (
+                    <span className="text-xs text-muted-text">+{person.positiveTags.length - 3}</span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* 缺點標籤 */}
+            {person.negativeTags.length > 0 && (
+              <div>
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 rounded-full bg-muted-text mr-2"></div>
+                  <span className="text-sm font-medium">缺點</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {person.negativeTags.slice(0, 3).map(tag => (
+                    <span key={tag} className="text-xs px-2 py-1 rounded-full bg-tag-bg text-tag-text">
+                      {tag}
+                    </span>
+                  ))}
+                  {person.negativeTags.length > 3 && (
+                    <span className="text-xs text-muted-text">+{person.negativeTags.length - 3}</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-      
-      <div className="p-4">
-        {/* 職業和認識管道 */}
-        <div className="flex flex-wrap text-sm mb-3">
-          {person.occupation && (
-            <div className="flex items-center mr-4 mb-1">
-              <FaBriefcase className="text-primary mr-1" />
-              <span className="truncate">{person.occupation}</span>
-            </div>
-          )}
-          
+        
+        {/* 底部區域 */}
+        <div className="mt-4 pt-4 border-t border-card-border flex justify-between items-center">
           {meetChannel && (
-            <div className="flex items-center mb-1">
-              <FaLink className="text-secondary mr-1" />
-              <span className="truncate">{meetChannel}</span>
+            <div className="text-xs text-muted-text">
+              {meetChannel}
             </div>
           )}
-        </div>
-        
-        {/* 社群帳號 */}
-        {person.contactInfo && (
-          <div className="flex items-center text-sm mb-3">
-            <FaUser className="text-gray-500 mr-1" />
-            <span className="truncate">{person.contactInfo}</span>
+          
+          <div className={`w-8 h-8 rounded-full ${randomColor} flex items-center justify-center text-highlight-text font-medium`}>
+            {person.name.charAt(0)}
           </div>
-        )}
-        
-        {/* 標籤 */}
-        <div className="space-y-2">
-          {/* 優點標籤 */}
-          {person.positiveTags.length > 0 && (
-            <div className="flex items-start">
-              <FaHeart className="text-error mt-1 mr-2 flex-shrink-0" />
-              <div className="flex flex-wrap gap-1">
-                {person.positiveTags.slice(0, 3).map(tag => (
-                  <span key={tag} className="bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 text-xs px-2 py-1 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-                {person.positiveTags.length > 3 && (
-                  <span className="text-xs text-gray-500">+{person.positiveTags.length - 3}</span>
-                )}
-              </div>
-            </div>
-          )}
-          
-          {/* 缺點標籤 */}
-          {person.negativeTags.length > 0 && (
-            <div className="flex items-start">
-              <FaHeartBroken className="text-gray-500 mt-1 mr-2 flex-shrink-0" />
-              <div className="flex flex-wrap gap-1">
-                {person.negativeTags.slice(0, 3).map(tag => (
-                  <span key={tag} className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-                {person.negativeTags.length > 3 && (
-                  <span className="text-xs text-gray-500">+{person.negativeTags.length - 3}</span>
-                )}
-              </div>
-            </div>
-          )}
-          
-          {/* 性格標籤 */}
-          {person.personalityTags.length > 0 && (
-            <div className="flex items-start">
-              <FaUserTag className="text-secondary mt-1 mr-2 flex-shrink-0" />
-              <div className="flex flex-wrap gap-1">
-                {person.personalityTags.slice(0, 3).map(tag => (
-                  <span key={tag} className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 text-xs px-2 py-1 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-                {person.personalityTags.length > 3 && (
-                  <span className="text-xs text-gray-500">+{person.personalityTags.length - 3}</span>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

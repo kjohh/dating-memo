@@ -1,14 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fff5f7;
-  --foreground: #4a1d2f;
-  --primary: #ff6b9d;
-  --primary-dark: #e84c88;
-  --secondary: #8a4fff;
-  --accent: #ffca3a;
+  --background: #ffffff;
+  --foreground: #111111;
+  --primary: #111111;
+  --primary-dark: #000000;
+  --secondary: #4ade80;
+  --accent: #f7f06d;
   --error: #ff4d6d;
-  --success: #06d6a0;
+  --success: #4ade80;
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.05);
+  --card-shadow: rgba(0, 0, 0, 0.03);
+  --tag-bg: #f5f5f5;
+  --tag-text: #333333;
+  --highlight-bg: #f7f06d;
+  --highlight-text: #111111;
+  --muted-bg: #e9ecef;
+  --muted-text: #6c757d;
 }
 
 @theme inline {
@@ -20,34 +29,51 @@
   --color-accent: var(--accent);
   --color-error: var(--error);
   --color-success: var(--success);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-card-shadow: var(--card-shadow);
+  --color-tag-bg: var(--tag-bg);
+  --color-tag-text: var(--tag-text);
+  --color-highlight-bg: var(--highlight-bg);
+  --color-highlight-text: var(--highlight-text);
+  --color-muted-bg: var(--muted-bg);
+  --color-muted-text: var(--muted-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #2d1a23;
-    --foreground: #f8e1e9;
-    --primary: #ff6b9d;
-    --primary-dark: #e84c88;
-    --secondary: #9d71ff;
-    --accent: #ffca3a;
+    --background: #111111;
+    --foreground: #f5f5f5;
+    --primary: #f5f5f5;
+    --primary-dark: #e0e0e0;
+    --secondary: #4ade80;
+    --accent: #f7f06d;
     --error: #ff4d6d;
-    --success: #06d6a0;
+    --success: #4ade80;
+    --card-bg: #1e1e1e;
+    --card-border: rgba(255, 255, 255, 0.05);
+    --card-shadow: rgba(0, 0, 0, 0.2);
+    --tag-bg: #2a2a2a;
+    --tag-text: #e0e0e0;
+    --highlight-bg: #f7f06d;
+    --highlight-text: #111111;
+    --muted-bg: #2a2a2a;
+    --muted-text: #a0a0a0;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   min-height: 100vh;
 }
 
 @keyframes heartbeat {
-  0% { transform: scale(1); }
+  0%, 100% { transform: scale(1); }
   50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
 }
 
 @keyframes fadeIn {
@@ -56,7 +82,7 @@ body {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 .heart-beat {
@@ -66,25 +92,32 @@ body {
 .gradient-text {
   background: linear-gradient(45deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
-  background-clip: text;
   color: transparent;
   display: inline-block;
 }
 
 .card {
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: var(--card-bg);
   border-radius: 1rem;
-  box-shadow: 0 4px 20px rgba(255, 107, 157, 0.15);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 20px var(--card-shadow);
   transition: all 0.3s ease;
+  overflow: hidden;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(255, 107, 157, 0.25);
+  box-shadow: 0 10px 25px var(--card-shadow);
+}
+
+/* 背景圖案 */
+.bg-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
 }
 
 @media (prefers-color-scheme: dark) {
-  .card {
-    background-color: rgba(45, 26, 35, 0.8);
+  .bg-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E");
   }
 }
