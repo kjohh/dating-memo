@@ -7,6 +7,7 @@ import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } 
 import DatePersonCard from '@/components/DatePersonCard';
 import DatePersonForm from '@/components/DatePersonForm';
 import StarRating from '@/components/StarRating';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function Home() {
   const [datePersons, setDatePersons] = useState<DatePerson[]>([]);
@@ -15,6 +16,8 @@ export default function Home() {
   const [viewingPerson, setViewingPerson] = useState<DatePerson | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [personToDelete, setPersonToDelete] = useState<string | null>(null);
 
   // 加載數據
   useEffect(() => {
@@ -65,11 +68,23 @@ export default function Home() {
 
   // 處理刪除約會對象
   const handleDeletePerson = (id: string) => {
-    if (window.confirm('確定要刪除這個約會對象嗎？')) {
-      deleteDatePerson(id);
+    setPersonToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (personToDelete) {
+      deleteDatePerson(personToDelete);
       setViewingPerson(null);
       setDatePersons(getAllDatePersons());
+      setShowDeleteConfirm(false);
+      setPersonToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setPersonToDelete(null);
   };
 
   // 過濾和排序約會對象
@@ -203,7 +218,7 @@ export default function Home() {
               </button>
               
               <h2 className="text-2xl font-bold mb-6 gradient-text">
-                {viewingPerson.name} 的詳細資料
+                {viewingPerson.name}
               </h2>
               
               <div className="space-y-6">
@@ -317,6 +332,18 @@ export default function Home() {
                 {/* 操作按鈕 */}
                 <div className="flex justify-end gap-3 pt-4">
                   <button
+                    onClick={() => handleDeletePerson(viewingPerson.id)}
+                    className="px-4 py-2 rounded-lg text-error hover:text-red-600 transition-colors"
+                  >
+                    刪除
+                  </button>
+                  <button
+                    onClick={() => setViewingPerson(null)}
+                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    關閉
+                  </button>
+                  <button
                     onClick={() => {
                       setEditingPerson(viewingPerson);
                       setViewingPerson(null);
@@ -325,18 +352,21 @@ export default function Home() {
                   >
                     編輯
                   </button>
-                  <button
-                    onClick={() => handleDeletePerson(viewingPerson.id)}
-                    className="px-4 py-2 rounded-lg bg-error hover:bg-red-600 text-white transition-colors"
-                  >
-                    刪除
-                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* 確認刪除對話框 */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="不暈了？"
+        message="恭喜你成功清醒，刪除後不能復原喔"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </main>
   );
 }
