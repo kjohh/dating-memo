@@ -57,8 +57,9 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-xl font-bold">{person.name}</h3>
             {person.rating && (
-              <div className="text-sm font-medium">
-                {person.rating}.0
+              <div className="flex items-center">
+                <FaStar className="text-accent mr-1" size={16} />
+                <span className="gradient-text font-medium">{person.rating}.0</span>
               </div>
             )}
           </div>
