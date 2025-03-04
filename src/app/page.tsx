@@ -120,44 +120,46 @@ export default function Home() {
         </p>
       </header>
 
-      {/* 搜尋和排序 */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
-          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="搜尋姓名、職業、標籤..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+      {/* 搜尋和排序 - 只在有資料時顯示 */}
+      {datePersons.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="搜尋姓名、職業、標籤..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          
+          <button
+            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+          >
+            {sortOrder === 'desc' ? (
+              <>
+                <FaSortAmountDown />
+                <span>最新優先</span>
+              </>
+            ) : (
+              <>
+                <FaSortAmountUp />
+                <span>最早優先</span>
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white flex items-center gap-2"
+          >
+            <FaPlus />
+            <span>新增對象</span>
+          </button>
         </div>
-        
-        <button
-          onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
-        >
-          {sortOrder === 'desc' ? (
-            <>
-              <FaSortAmountDown />
-              <span>最新優先</span>
-            </>
-          ) : (
-            <>
-              <FaSortAmountUp />
-              <span>最早優先</span>
-            </>
-          )}
-        </button>
-        
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white flex items-center gap-2"
-        >
-          <FaPlus />
-          <span>新增對象</span>
-        </button>
-      </div>
+      )}
 
       {/* 約會對象列表 */}
       {filteredAndSortedPersons.length === 0 ? (
