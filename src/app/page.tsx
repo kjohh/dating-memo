@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { DatePerson, DatePersonForm as DatePersonFormData } from '@/types';
 import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } from '@/utils/storage';
 import DatePersonCard from '@/components/DatePersonCard';
 import DatePersonForm from '@/components/DatePersonForm';
-import StarRating from '@/components/StarRating';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import Image from 'next/image';
 
@@ -14,7 +13,6 @@ export default function Home() {
   const [datePersons, setDatePersons] = useState<DatePerson[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingPerson, setEditingPerson] = useState<DatePerson | null>(null);
-  const [viewingPerson, setViewingPerson] = useState<DatePerson | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -74,7 +72,7 @@ export default function Home() {
   const confirmDelete = () => {
     if (personToDelete) {
       deleteDatePerson(personToDelete);
-      setViewingPerson(null);
+      setEditingPerson(null);
       setDatePersons(getAllDatePersons());
       setShowDeleteConfirm(false);
       setPersonToDelete(null);
@@ -192,7 +190,7 @@ export default function Home() {
             <DatePersonCard
               key={person.id}
               person={person}
-              onClick={() => setViewingPerson(person)}
+              onClick={() => setEditingPerson(person)}
             />
           ))}
         </div>
@@ -209,161 +207,8 @@ export default function Home() {
                 setShowAddForm(false);
                 setEditingPerson(null);
               }}
+              onDelete={editingPerson ? () => handleDeletePerson(editingPerson.id) : undefined}
             />
-          </div>
-        </div>
-      )}
-
-      {/* 查看詳情模態框 */}
-      {viewingPerson && (
-        <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="relative">
-              <button
-                onClick={() => setViewingPerson(null)}
-                className="absolute right-0 top-0 p-2 text-gray-500 hover:text-error"
-              >
-                <FaTimes size={20} />
-              </button>
-              
-              <h2 className="text-2xl font-bold mb-6 gradient-text">
-                {viewingPerson.name}
-              </h2>
-              
-              <div className="space-y-6">
-                {/* 基本資訊 */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">基本資訊</h3>
-                    
-                    {viewingPerson.age && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">年齡</h3>
-                        <p>{viewingPerson.age} 歲</p>
-                      </div>
-                    )}
-                    
-                    {viewingPerson.gender && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">性別</h3>
-                        <p>{viewingPerson.gender}</p>
-                      </div>
-                    )}
-                    
-                    {viewingPerson.occupation && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">職業</h3>
-                        <p>{viewingPerson.occupation}</p>
-                      </div>
-                    )}
-                    
-                    {viewingPerson.contactInfo && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">社群帳號</h3>
-                        <p>{viewingPerson.contactInfo}</p>
-                      </div>
-                    )}
-                    
-                    {viewingPerson.meetChannel && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">認識管道</h3>
-                        <p>{viewingPerson.meetChannel.includes(':') 
-                          ? viewingPerson.meetChannel.replace(':', ': ') 
-                          : viewingPerson.meetChannel}</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    {viewingPerson.rating && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">評分</h3>
-                        <StarRating rating={viewingPerson.rating} readonly />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* 標籤 */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">特質標籤</h3>
-                  
-                  {viewingPerson.positiveTags.length > 0 && (
-                    <div className="mb-3">
-                      <h4 className="text-sm font-medium text-gray-500 mb-1">優點</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {viewingPerson.positiveTags.map(tag => (
-                          <span key={tag} className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {viewingPerson.negativeTags.length > 0 && (
-                    <div className="mb-3">
-                      <h4 className="text-sm font-medium text-gray-500 mb-1">缺點</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {viewingPerson.negativeTags.map(tag => (
-                          <span key={tag} className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-3 py-1 rounded-full text-sm">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {viewingPerson.personalityTags.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500 mb-1">性格特質</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {viewingPerson.personalityTags.map(tag => (
-                          <span key={tag} className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* 備註 */}
-                {viewingPerson.notes && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">備註</h3>
-                    <p className="whitespace-pre-wrap bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                      {viewingPerson.notes}
-                    </p>
-                  </div>
-                )}
-                
-                {/* 操作按鈕 */}
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    onClick={() => handleDeletePerson(viewingPerson.id)}
-                    className="px-4 py-2 rounded-lg text-error hover:text-red-600 transition-colors"
-                  >
-                    刪除
-                  </button>
-                  <button
-                    onClick={() => setViewingPerson(null)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    關閉
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingPerson(viewingPerson);
-                      setViewingPerson(null);
-                    }}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    編輯
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

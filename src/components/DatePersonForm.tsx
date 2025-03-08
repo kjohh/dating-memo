@@ -4,12 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { DatePersonForm as DatePersonFormType, datePersonFormSchema, PRESET_POSITIVE_TAGS, PRESET_NEGATIVE_TAGS, PRESET_PERSONALITY_TAGS } from '@/types';
 import TagSelector from './TagSelector';
 import StarRating from './StarRating';
-import { FaTimes, FaUser, FaTags, FaFileAlt, FaCheck } from 'react-icons/fa';
+import { FaTimes, FaUser, FaTags, FaFileAlt, FaCheck, FaTrash } from 'react-icons/fa';
 
 interface DatePersonFormProps {
   initialData?: Partial<DatePersonFormType>;
   onSubmit: (data: DatePersonFormType) => void;
   onCancel: () => void;
+  onDelete?: () => void;
 }
 
 // 表單標籤頁
@@ -21,7 +22,8 @@ type MeetChannel = '交友軟體' | '社群媒體' | '親友介紹' | '工作關
 const DatePersonForm: React.FC<DatePersonFormProps> = ({
   initialData,
   onSubmit,
-  onCancel
+  onCancel,
+  onDelete
 }) => {
   // 當前標籤頁
   const [currentTab, setCurrentTab] = useState<FormTab>('基本');
@@ -42,6 +44,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       personalityTags: initialData?.personalityTags || [],
       rating: initialData?.rating ? String(initialData.rating) : '' as any,
       meetChannel: initialData?.meetChannel || '',
+      instagramAccount: initialData?.instagramAccount || '',
     },
     mode: 'onChange'
   });
@@ -330,6 +333,25 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
             </div>
 
             <div>
+              <label htmlFor="instagramAccount" className="block text-sm font-medium mb-1">
+                Instagram 帳號
+              </label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                  instagram.com/
+                </span>
+                <input
+                  id="instagramAccount"
+                  type="text"
+                  {...register('instagramAccount')}
+                  className="flex-1 px-4 py-2 rounded-r-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="username"
+                />
+              </div>
+              <p className="text-xs text-muted-text mt-1">請輸入不含 @ 的用戶名，例如：username</p>
+            </div>
+
+            <div>
               <label htmlFor="notes" className="block text-sm font-medium mb-1">
                 備註
               </label>
@@ -346,6 +368,16 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="px-4 py-2 rounded-lg text-error hover:text-red-600 transition-colors mr-auto"
+          >
+            <FaTrash className="mr-1" />
+            <span>刪除</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={onCancel}

@@ -25,6 +25,7 @@ export const datePersonSchema = z.object({
   occupation: z.string().optional(),
   contactInfo: z.string().optional(),
   notes: z.string().optional(),
+  instagramAccount: z.string().optional(),
   positiveTags: z.array(z.string()),
   negativeTags: z.array(z.string()),
   personalityTags: z.array(z.string()),

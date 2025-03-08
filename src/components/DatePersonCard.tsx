@@ -1,6 +1,6 @@
 import React from 'react';
 import { DatePerson } from '@/types';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaInstagram } from 'react-icons/fa';
 
 interface DatePersonCardProps {
   person: DatePerson;
@@ -16,6 +16,14 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
     return parts[0] === '其他' && parts.length > 1 
       ? `${parts[0]}: ${parts[1]}`
       : parts[0];
+  };
+
+  // 處理 Instagram 點擊
+  const handleInstagramClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止觸發卡片的點擊事件
+    if (person.instagramAccount) {
+      window.open(`https://instagram.com/${person.instagramAccount}`, '_blank');
+    }
   };
 
   // 獲取隨機背景色
@@ -55,12 +63,14 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-xl font-bold">{person.name}</h3>
-            {person.rating && (
-              <div className="flex items-center">
-                <FaStar className="text-accent mr-1" size={16} />
-                <span className="gradient-text font-medium">{person.rating}.0</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {person.rating && (
+                <div className="flex items-center">
+                  <FaStar className="text-accent mr-1" size={16} />
+                  <span className="gradient-text font-medium">{person.rating}.0</span>
+                </div>
+              )}
+            </div>
           </div>
           <p className="text-xs text-muted-text">{prefix}</p>
         </div>
@@ -138,9 +148,15 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
             </div>
           )}
           
-          <div className={`w-8 h-8 rounded-full ${randomColor} flex items-center justify-center text-highlight-text font-medium`}>
-            {person.name.charAt(0)}
-          </div>
+          {person.instagramAccount && (
+            <button 
+              onClick={handleInstagramClick}
+              className="text-pink-500 hover:text-pink-600 transition-colors"
+              aria-label="Instagram"
+            >
+              <FaInstagram size={18} />
+            </button>
+          )}
         </div>
       </div>
     </div>
