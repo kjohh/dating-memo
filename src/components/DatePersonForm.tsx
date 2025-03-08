@@ -55,6 +55,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       meetChannel: initialData?.meetChannel || '',
       instagramAccount: initialData?.instagramAccount || '',
       relationshipStatus: initialData?.relationshipStatus || '觀察中',
+      firstDateAt: initialData?.firstDateAt || '',
     },
     mode: 'onChange'
   });
@@ -379,6 +380,19 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 />
               </div>
               <p className="text-xs text-muted-text mt-1">請輸入不含 @ 的用戶名，例如：username</p>
+            </div>
+
+            <div>
+              <label htmlFor="firstDateAt" className="block text-sm font-medium mb-1">
+                初次約會
+              </label>
+              <input
+                id="firstDateAt"
+                type="text"
+                {...register('firstDateAt')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="記錄初次約會的時間、地點或其他相關資訊..."
+              />
             </div>
 
             <div>

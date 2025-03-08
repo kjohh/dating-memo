@@ -54,6 +54,7 @@ export const datePersonSchema = z.object({
   notes: z.string().optional(),
   instagramAccount: z.string().optional(),
   relationshipStatus: z.enum(RELATIONSHIP_STATUSES).default('觀察中'),
+  firstDateAt: z.string().optional(),
   positiveTags: z.array(z.string()),
   negativeTags: z.array(z.string()),
   personalityTags: z.array(z.string()),

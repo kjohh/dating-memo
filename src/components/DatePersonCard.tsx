@@ -1,6 +1,6 @@
 import React from 'react';
 import { DatePerson, RELATIONSHIP_STATUS_COLORS } from '@/types';
-import { FaStar, FaInstagram, FaHeart, FaEye, FaCalendarCheck, FaSmile, FaHandHoldingHeart, FaRing, FaTimesCircle } from 'react-icons/fa';
+import { FaStar, FaInstagram, FaHeart, FaEye, FaCalendarCheck, FaSmile, FaHandHoldingHeart, FaRing, FaTimesCircle, FaCalendarAlt } from 'react-icons/fa';
 
 interface DatePersonCardProps {
   person: DatePerson;
@@ -168,11 +168,19 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
         
         {/* 底部區域 */}
         <div className="mt-4 pt-4 border-t border-card-border flex justify-between items-center">
-          {meetChannel && (
-            <div className="text-xs text-muted-text">
-              {meetChannel}
-            </div>
-          )}
+          <div className="flex flex-col">
+            {meetChannel && (
+              <div className="text-xs text-muted-text">
+                {meetChannel}
+              </div>
+            )}
+            {person.firstDateAt && (
+              <div className="text-xs text-muted-text flex items-center mt-1">
+                <FaCalendarAlt className="mr-1" size={10} />
+                {person.firstDateAt}
+              </div>
+            )}
+          </div>
           
           {person.instagramAccount && (
             <button 
