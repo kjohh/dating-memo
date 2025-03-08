@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt, FaFilter, FaEllipsisV } from 'react-icons/fa';
 import { DatePerson, DatePersonForm as DatePersonFormData, RELATIONSHIP_STATUSES } from '@/types';
 import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } from '@/utils/storage';
 import DatePersonCard from '@/components/DatePersonCard';
@@ -16,8 +16,11 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
+  
+  const sortMenuRef = useRef<HTMLDivElement>(null);
 
   // 加載數據
   useEffect(() => {
@@ -33,6 +36,20 @@ export default function Home() {
     
     return () => {
       window.removeEventListener('storage', loadData);
+    };
+  }, []);
+
+  // 點擊外部關閉排序菜單
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
+        setShowSortMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -113,6 +130,15 @@ export default function Home() {
       }
     });
 
+  // 獲取排序文字
+  const getSortText = () => {
+    if (sortBy === 'date') {
+      return sortOrder === 'desc' ? '最新優先' : '最早優先';
+    } else {
+      return sortOrder === 'desc' ? '關係進展由淺至深' : '關係進展由深至淺';
+    }
+  };
+
   return (
     <main className="min-h-screen p-4 max-w-5xl mx-auto">
       {/* 頭部 */}
@@ -127,7 +153,7 @@ export default function Home() {
 
       {/* 搜尋和排序 - 只在有資料時顯示 */}
       {datePersons.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="flex gap-2 mb-6 items-center">
           <div className="relative flex-1">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -139,46 +165,80 @@ export default function Home() {
             />
           </div>
           
-          <button
-            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-            className="px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 hover:bg-gray-700 flex items-center gap-2 text-gray-200"
-          >
-            {sortOrder === 'desc' ? (
-              <>
-                <FaSortAmountDown />
-                <span>最新優先</span>
-              </>
-            ) : (
-              <>
-                <FaSortAmountUp />
-                <span>最早優先</span>
-              </>
+          <div className="relative" ref={sortMenuRef}>
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className="p-2 rounded-lg border border-gray-700 bg-gray-800/70 hover:bg-gray-700 flex items-center justify-center text-gray-200"
+              aria-label="排序選項"
+            >
+              <FaFilter />
+            </button>
+            
+            {showSortMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg z-10 overflow-hidden">
+                <div className="p-2 border-b border-gray-700 text-sm font-medium text-gray-300">排序方式</div>
+                <button
+                  onClick={() => {
+                    setSortBy('date');
+                    setSortOrder('desc');
+                    setShowSortMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
+                    sortBy === 'date' && sortOrder === 'desc' ? 'bg-gray-700' : ''
+                  }`}
+                >
+                  <FaSortAmountDown className="text-gray-400" />
+                  <span>最新優先</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy('date');
+                    setSortOrder('asc');
+                    setShowSortMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
+                    sortBy === 'date' && sortOrder === 'asc' ? 'bg-gray-700' : ''
+                  }`}
+                >
+                  <FaSortAmountUp className="text-gray-400" />
+                  <span>最早優先</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy('status');
+                    setSortOrder('desc');
+                    setShowSortMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
+                    sortBy === 'status' && sortOrder === 'desc' ? 'bg-gray-700' : ''
+                  }`}
+                >
+                  <FaHeart className="text-gray-400" />
+                  <span>關係進展由淺至深</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy('status');
+                    setSortOrder('asc');
+                    setShowSortMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
+                    sortBy === 'status' && sortOrder === 'asc' ? 'bg-gray-700' : ''
+                  }`}
+                >
+                  <FaHeart className="text-gray-400" />
+                  <span>關係進展由深至淺</span>
+                </button>
+              </div>
             )}
-          </button>
-          
-          <button
-            onClick={() => setSortBy(sortBy === 'date' ? 'status' : 'date')}
-            className="px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 hover:bg-gray-700 flex items-center gap-2 text-gray-200"
-          >
-            {sortBy === 'date' ? (
-              <>
-                <FaCalendarAlt />
-                <span>按時間</span>
-              </>
-            ) : (
-              <>
-                <FaHeart />
-                <span>按關係</span>
-              </>
-            )}
-          </button>
+          </div>
           
           <button
             onClick={() => setShowAddForm(true)}
             className="btn-primary"
           >
             <FaPlus />
-            <span>新增對象</span>
+            <span className="hidden sm:inline">新增對象</span>
           </button>
         </div>
       )}
