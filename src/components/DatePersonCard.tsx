@@ -1,6 +1,6 @@
 import React from 'react';
 import { DatePerson } from '@/types';
-import { FaStar, FaInstagram } from 'react-icons/fa';
+import { FaStar, FaInstagram, FaHeart } from 'react-icons/fa';
 
 interface DatePersonCardProps {
   person: DatePerson;
@@ -79,6 +79,11 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
         <div className="flex-grow">
           {/* 基本資訊 */}
           <div className="flex flex-wrap gap-2 mb-4">
+            {person.relationshipStatus && (
+              <div className="text-sm px-3 py-1 rounded-full bg-accent/20 text-accent font-medium">
+                {person.relationshipStatus}
+              </div>
+            )}
             {person.age && (
               <div className="text-sm px-3 py-1 rounded-full bg-tag-bg text-tag-text">
                 {person.age}歲

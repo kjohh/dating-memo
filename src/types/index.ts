@@ -16,6 +16,23 @@ export const PRESET_PERSONALITY_TAGS = [
   '完美主義', '隨性', '獨立', '依賴', '務實', '理想主義', '領導型', '跟隨型'
 ];
 
+// 關係狀態
+export const RELATIONSHIP_STATUSES = [
+  '觀察中', '約見面', '曖昧中', '穩定發展', '正式交往', '結束 / 無發展'
+] as const;
+
+export type RelationshipStatus = typeof RELATIONSHIP_STATUSES[number];
+
+// 關係狀態的描述
+export const RELATIONSHIP_STATUS_DESCRIPTIONS: Record<RelationshipStatus, string> = {
+  '觀察中': '剛認識或剛開始聊天，還不確定是否有發展的可能。對方可能回應不積極，或自己還在評估是否有興趣繼續互動。',
+  '約見面': '已經有一定程度的互動，並安排了見面，或是已經見過一次但還在觀察是否適合進一步發展。',
+  '曖昧中': '互相有好感，雙方的互動頻率較高，可能有些曖昧的對話或行為，但尚未正式確認關係。',
+  '穩定發展': '互動已經相當頻繁，彼此對對方的興趣明顯增加，關係趨向明確，可能正在固定約會，但尚未正式進入交往狀態。',
+  '正式交往': '雙方已經確認彼此的關係，進入穩定的情侶階段。',
+  '結束 / 無發展': '無進一步發展的可能，可能是因為互相無感、對方不感興趣、關係自然淡掉，或其他原因導致互動終止。'
+};
+
 // 約會對象的模式定義
 export const datePersonSchema = z.object({
   id: z.string(),
@@ -26,6 +43,7 @@ export const datePersonSchema = z.object({
   contactInfo: z.string().optional(),
   notes: z.string().optional(),
   instagramAccount: z.string().optional(),
+  relationshipStatus: z.enum(RELATIONSHIP_STATUSES).default('觀察中'),
   positiveTags: z.array(z.string()),
   negativeTags: z.array(z.string()),
   personalityTags: z.array(z.string()),

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { DatePerson, DatePersonForm as DatePersonFormData } from '@/types';
+import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt } from 'react-icons/fa';
+import { DatePerson, DatePersonForm as DatePersonFormData, RELATIONSHIP_STATUSES } from '@/types';
 import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } from '@/utils/storage';
 import DatePersonCard from '@/components/DatePersonCard';
 import DatePersonForm from '@/components/DatePersonForm';
@@ -15,6 +15,7 @@ export default function Home() {
   const [editingPerson, setEditingPerson] = useState<DatePerson | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
 
@@ -94,14 +95,22 @@ export default function Home() {
         person.name.toLowerCase().includes(searchLower) ||
         (person.occupation && person.occupation.toLowerCase().includes(searchLower)) ||
         (person.meetChannel && person.meetChannel.toLowerCase().includes(searchLower)) ||
+        (person.relationshipStatus && person.relationshipStatus.includes(searchLower)) ||
         [...person.positiveTags, ...person.negativeTags, ...person.personalityTags]
           .some(tag => tag.toLowerCase().includes(searchLower))
       );
     })
     .sort((a, b) => {
-      const dateA = a.updatedAt.getTime();
-      const dateB = b.updatedAt.getTime();
-      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+      if (sortBy === 'date') {
+        const dateA = a.updatedAt.getTime();
+        const dateB = b.updatedAt.getTime();
+        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+      } else {
+        // 根據關係狀態排序
+        const statusA = RELATIONSHIP_STATUSES.indexOf(a.relationshipStatus);
+        const statusB = RELATIONSHIP_STATUSES.indexOf(b.relationshipStatus);
+        return sortOrder === 'desc' ? statusA - statusB : statusB - statusA;
+      }
     });
 
   return (
@@ -143,6 +152,23 @@ export default function Home() {
               <>
                 <FaSortAmountUp />
                 <span>最早優先</span>
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={() => setSortBy(sortBy === 'date' ? 'status' : 'date')}
+            className="px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 hover:bg-gray-700 flex items-center gap-2 text-gray-200"
+          >
+            {sortBy === 'date' ? (
+              <>
+                <FaCalendarAlt />
+                <span>按時間</span>
+              </>
+            ) : (
+              <>
+                <FaHeart />
+                <span>按關係</span>
               </>
             )}
           </button>

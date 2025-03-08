@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DatePersonForm as DatePersonFormType, datePersonFormSchema, PRESET_POSITIVE_TAGS, PRESET_NEGATIVE_TAGS, PRESET_PERSONALITY_TAGS } from '@/types';
+import { 
+  DatePersonForm as DatePersonFormType, 
+  datePersonFormSchema, 
+  PRESET_POSITIVE_TAGS, 
+  PRESET_NEGATIVE_TAGS, 
+  PRESET_PERSONALITY_TAGS,
+  RELATIONSHIP_STATUSES,
+  RELATIONSHIP_STATUS_DESCRIPTIONS,
+  RelationshipStatus
+} from '@/types';
 import TagSelector from './TagSelector';
 import StarRating from './StarRating';
-import { FaTimes, FaUser, FaTags, FaFileAlt, FaCheck, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaUser, FaTags, FaFileAlt, FaCheck, FaTrash, FaHeart } from 'react-icons/fa';
 
 interface DatePersonFormProps {
   initialData?: Partial<DatePersonFormType>;
@@ -45,6 +54,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       rating: initialData?.rating ? String(initialData.rating) : '' as any,
       meetChannel: initialData?.meetChannel || '',
       instagramAccount: initialData?.instagramAccount || '',
+      relationshipStatus: initialData?.relationshipStatus || '觀察中',
     },
     mode: 'onChange'
   });
@@ -232,6 +242,34 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 rating={(rating ? Number(rating) : 0) as any}
                 onChange={(value: any) => setValue('rating', value.toString())}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                關係狀態
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {RELATIONSHIP_STATUSES.map((status) => {
+                  const relationshipStatus = watch('relationshipStatus');
+                  return (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setValue('relationshipStatus', status)}
+                      className={`py-2 px-3 rounded-lg border text-sm ${
+                        relationshipStatus === status
+                          ? 'btn-primary border-0'
+                          : 'bg-gray-800/70 border-gray-700'
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-text mt-2">
+                {RELATIONSHIP_STATUS_DESCRIPTIONS[watch('relationshipStatus') as RelationshipStatus]}
+              </p>
             </div>
           </div>
         )}
