@@ -1,6 +1,6 @@
 import React from 'react';
-import { DatePerson } from '@/types';
-import { FaStar, FaInstagram, FaHeart } from 'react-icons/fa';
+import { DatePerson, RELATIONSHIP_STATUS_COLORS } from '@/types';
+import { FaStar, FaInstagram, FaHeart, FaEye, FaCalendarCheck, FaSmile, FaHandHoldingHeart, FaRing, FaTimesCircle } from 'react-icons/fa';
 
 interface DatePersonCardProps {
   person: DatePerson;
@@ -49,6 +49,26 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
     return prefixes[seed % prefixes.length];
   };
 
+  // 獲取關係狀態圖標
+  const getRelationshipIcon = () => {
+    switch (person.relationshipStatus) {
+      case '觀察中':
+        return <FaEye className="mr-1" />;
+      case '約見面':
+        return <FaCalendarCheck className="mr-1" />;
+      case '曖昧中':
+        return <FaSmile className="mr-1" />;
+      case '穩定發展':
+        return <FaHandHoldingHeart className="mr-1" />;
+      case '正式交往':
+        return <FaRing className="mr-1" />;
+      case '結束 / 無發展':
+        return <FaTimesCircle className="mr-1" />;
+      default:
+        return null;
+    }
+  };
+
   const meetChannel = getMeetChannel();
   const prefix = getHumorousPrefix();
   const randomColor = getRandomColor();
@@ -80,7 +100,8 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
           {/* 基本資訊 */}
           <div className="flex flex-wrap gap-2 mb-4">
             {person.relationshipStatus && (
-              <div className="text-sm px-3 py-1 rounded-full bg-accent/20 text-accent font-medium">
+              <div className={`text-sm px-3 py-1 rounded-full ${RELATIONSHIP_STATUS_COLORS[person.relationshipStatus].bg} ${RELATIONSHIP_STATUS_COLORS[person.relationshipStatus].text} font-medium flex items-center`}>
+                {getRelationshipIcon()}
                 {person.relationshipStatus}
               </div>
             )}

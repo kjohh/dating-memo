@@ -188,6 +188,43 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
             </div>
 
             <div>
+              <label htmlFor="age" className="block text-sm font-medium mb-1">
+                年齡
+              </label>
+              <input
+                id="age"
+                type="number"
+                min="18"
+                {...register('age')}
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="請輸入年齡"
+              />
+              {errors.age && (
+                <p className="text-error text-sm mt-1">{errors.age.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                關係狀態
+              </label>
+              <select
+                value={watch('relationshipStatus')}
+                onChange={(e) => setValue('relationshipStatus', e.target.value as RelationshipStatus)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary text-gray-200"
+              >
+                {RELATIONSHIP_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-text mt-2">
+                {RELATIONSHIP_STATUS_DESCRIPTIONS[watch('relationshipStatus') as RelationshipStatus]}
+              </p>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium mb-2">
                 生理性別
               </label>
@@ -216,24 +253,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 </button>
               </div>
             </div>
-
-            <div>
-              <label htmlFor="age" className="block text-sm font-medium mb-1">
-                年齡
-              </label>
-              <input
-                id="age"
-                type="number"
-                min="18"
-                {...register('age')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="請輸入年齡"
-              />
-              {errors.age && (
-                <p className="text-error text-sm mt-1">{errors.age.message}</p>
-              )}
-            </div>
-
+            
             <div>
               <label className="block text-sm font-medium mb-2">
                 評分
@@ -242,34 +262,6 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 rating={(rating ? Number(rating) : 0) as any}
                 onChange={(value: any) => setValue('rating', value.toString())}
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                關係狀態
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {RELATIONSHIP_STATUSES.map((status) => {
-                  const relationshipStatus = watch('relationshipStatus');
-                  return (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => setValue('relationshipStatus', status)}
-                      className={`py-2 px-3 rounded-lg border text-sm ${
-                        relationshipStatus === status
-                          ? 'btn-primary border-0'
-                          : 'bg-gray-800/70 border-gray-700'
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-muted-text mt-2">
-                {RELATIONSHIP_STATUS_DESCRIPTIONS[watch('relationshipStatus') as RelationshipStatus]}
-              </p>
             </div>
           </div>
         )}

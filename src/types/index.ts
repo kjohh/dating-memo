@@ -33,6 +33,16 @@ export const RELATIONSHIP_STATUS_DESCRIPTIONS: Record<RelationshipStatus, string
   '結束 / 無發展': '無進一步發展的可能，可能是因為互相無感、對方不感興趣、關係自然淡掉，或其他原因導致互動終止。'
 };
 
+// 關係狀態的顏色
+export const RELATIONSHIP_STATUS_COLORS: Record<RelationshipStatus, { bg: string; text: string }> = {
+  '觀察中': { bg: 'bg-blue-500/20', text: 'text-blue-400' },
+  '約見面': { bg: 'bg-purple-500/20', text: 'text-purple-400' },
+  '曖昧中': { bg: 'bg-pink-500/20', text: 'text-pink-400' },
+  '穩定發展': { bg: 'bg-amber-500/20', text: 'text-amber-400' },
+  '正式交往': { bg: 'bg-red-500/20', text: 'text-red-400' },
+  '結束 / 無發展': { bg: 'bg-gray-500/20', text: 'text-gray-400' }
+};
+
 // 約會對象的模式定義
 export const datePersonSchema = z.object({
   id: z.string(),
