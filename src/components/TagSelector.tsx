@@ -92,7 +92,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
               className={`px-3 py-1 rounded-full text-sm border transition-all ${
                 selectedTags.includes(tag)
                   ? `${tagClassName} border-transparent`
-                  : 'bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 hover:border-primary dark:hover:border-primary'
+                  : 'bg-gray-800/50 border-gray-700 hover:border-primary'
               }`}
             >
               {tag}
@@ -103,7 +103,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
             <button
               type="button"
               onClick={() => setShowAllTags(!showAllTags)}
-              className="px-3 py-1 rounded-full text-sm border border-gray-300 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-primary dark:hover:border-primary"
+              className="px-3 py-1 rounded-full text-sm border border-gray-700 bg-gray-800/50 hover:border-primary"
             >
               {showAllTags ? '收起' : '更多...'}
             </button>
@@ -120,7 +120,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
             onChange={(e) => setCustomTag(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="新增自定義標籤..."
-            className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 px-3 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
             maxLength={15}
           />
         </div>

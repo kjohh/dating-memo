@@ -137,7 +137,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       </div>
 
       {/* 標籤頁導航 */}
-      <div className="flex flex-wrap border-b border-gray-300 dark:border-gray-700 mb-6">
+      <div className="flex flex-wrap border-b border-gray-700 mb-6">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -146,7 +146,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               currentTab === tab 
                 ? 'text-primary border-b-2 border-primary -mb-px' 
-                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                : 'text-gray-500 hover:text-gray-300'
             }`}
             style={{ width: `${100 / tabs.length}%` }}
           >
@@ -169,7 +169,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 id="name"
                 type="text"
                 {...register('name')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="請輸入姓名"
               />
               {errors.name && (
@@ -188,7 +188,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                   className={`flex-1 py-2 px-4 rounded-lg border ${
                     gender === '男'
                       ? 'btn-primary border-0'
-                      : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
+                      : 'bg-gray-800/70 border-gray-700'
                   }`}
                 >
                   男
@@ -199,7 +199,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                   className={`flex-1 py-2 px-4 rounded-lg border ${
                     gender === '女'
                       ? 'btn-primary border-0'
-                      : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
+                      : 'bg-gray-800/70 border-gray-700'
                   }`}
                 >
                   女
@@ -216,7 +216,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 type="number"
                 min="18"
                 {...register('age')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="請輸入年齡"
               />
               {errors.age && (
@@ -245,7 +245,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 availableTags={PRESET_POSITIVE_TAGS}
                 selectedTags={positiveTags}
                 onChange={(tags) => setValue('positiveTags', tags)}
-                tagClassName="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                tagClassName="bg-green-100 text-green-800"
               />
             </div>
 
@@ -255,7 +255,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 availableTags={PRESET_NEGATIVE_TAGS}
                 selectedTags={negativeTags}
                 onChange={(tags) => setValue('negativeTags', tags)}
-                tagClassName="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                tagClassName="bg-red-100 text-red-800"
               />
             </div>
 
@@ -265,7 +265,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 availableTags={PRESET_PERSONALITY_TAGS}
                 selectedTags={personalityTags}
                 onChange={(tags) => setValue('personalityTags', tags)}
-                tagClassName="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                tagClassName="bg-blue-100 text-blue-800"
               />
             </div>
           </div>
@@ -287,7 +287,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                     className={`py-2 px-3 rounded-lg border text-sm ${
                       meetChannel === channel
                         ? 'btn-primary border-0'
-                        : 'bg-white/70 dark:bg-gray-800/70 border-gray-300 dark:border-gray-700'
+                        : 'bg-gray-800/70 border-gray-700'
                     }`}
                   >
                     {channel}
@@ -300,7 +300,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                   type="text"
                   value={otherChannel}
                   onChange={(e) => handleOtherChannelChange(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary mt-2"
+                  className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary mt-2"
                   placeholder="請輸入其他認識管道"
                 />
               )}
@@ -314,7 +314,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 id="occupation"
                 type="text"
                 {...register('occupation')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="請輸入職業"
               />
             </div>
@@ -327,7 +327,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 id="contactInfo"
                 type="text"
                 {...register('contactInfo')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="IG、FB、Line ID 等"
               />
             </div>
@@ -337,14 +337,14 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 Instagram 帳號
               </label>
               <div className="flex">
-                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-700 bg-gray-800 text-gray-400">
                   instagram.com/
                 </span>
                 <input
                   id="instagramAccount"
                   type="text"
                   {...register('instagramAccount')}
-                  className="flex-1 px-4 py-2 rounded-r-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="flex-1 px-4 py-2 rounded-r-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="username"
                 />
               </div>
@@ -359,7 +359,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
                 id="notes"
                 {...register('notes')}
                 rows={6}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="記錄你的印象、感受或其他重要資訊..."
               ></textarea>
             </div>
@@ -367,7 +367,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
         )}
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
         {onDelete && (
           <button
             type="button"
@@ -381,7 +381,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
         >
           取消
         </button>
