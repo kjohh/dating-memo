@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt, FaFilter, FaEllipsisV } from 'react-icons/fa';
 import { DatePerson, DatePersonForm as DatePersonFormData, RELATIONSHIP_STATUSES } from '@/types';
 import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } from '@/utils/storage';
@@ -33,6 +34,7 @@ export default function Home() {
   }>({ show: false, type: 'info', message: '' });
   
   const sortMenuRef = useRef<HTMLDivElement>(null);
+  const sortButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -236,6 +238,74 @@ export default function Home() {
     setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
   };
   
+  const getSortMenuPosition = () => {
+    if (!sortButtonRef.current) return { top: 0, right: 0 };
+    const rect = sortButtonRef.current.getBoundingClientRect();
+    return {
+      top: rect.bottom + window.scrollY + 8,
+      right: window.innerWidth - rect.right,
+    };
+  };
+  
+  const renderSortMenu = () => {
+    if (!showSortMenu) return null;
+    
+    const { top, right } = getSortMenuPosition();
+    
+    const menuContent = (
+      <div 
+        className="fixed bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-[999] min-w-[180px]"
+        style={{ top: `${top}px`, right: `${right}px` }}
+        ref={sortMenuRef}
+      >
+        <div className="p-2 border-b border-gray-700">
+          <div className="text-sm text-gray-400 mb-1">排序方式</div>
+          <div className="flex flex-col gap-1">
+            <button
+              onClick={() => {
+                setSortBy('date');
+                setShowSortMenu(false);
+              }}
+              className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${
+                sortBy === 'date' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
+              }`}
+            >
+              <FaCalendarAlt className="flex-shrink-0" />
+              <span className="whitespace-nowrap">按日期</span>
+            </button>
+            <button
+              onClick={() => {
+                setSortBy('status');
+                setShowSortMenu(false);
+              }}
+              className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${
+                sortBy === 'status' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
+              }`}
+            >
+              <FaHeart className="flex-shrink-0" />
+              <span className="whitespace-nowrap">按關係狀態</span>
+            </button>
+          </div>
+        </div>
+        <div className="p-2">
+          <div className="text-sm text-gray-400 mb-1">排序順序</div>
+          <button
+            onClick={() => {
+              toggleSortOrder();
+              setShowSortMenu(false);
+            }}
+            className="w-full px-3 py-1.5 rounded-md flex items-center gap-2 hover:bg-gray-700"
+          >
+            {sortOrder === 'desc' ? <FaSortAmountDown className="flex-shrink-0" /> : <FaSortAmountUp className="flex-shrink-0" />}
+            <span className="whitespace-nowrap">{sortOrder === 'desc' ? '降序' : '升序'}</span>
+          </button>
+        </div>
+      </div>
+    );
+    
+    return typeof document !== 'undefined' ? createPortal(menuContent, document.body) : null;
+  };
+  
   const renderSyncNotification = () => {
     if (!syncMessage.show) return null;
     
@@ -312,8 +382,9 @@ export default function Home() {
             />
           </div>
           
-          <div className="relative" ref={sortMenuRef}>
+          <div className="relative">
             <button
+              ref={sortButtonRef}
               onClick={() => setShowSortMenu(!showSortMenu)}
               className="p-2 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 transition-colors flex items-center gap-2"
             >
@@ -321,52 +392,7 @@ export default function Home() {
               <span className="hidden sm:inline">排序</span>
             </button>
             
-            {showSortMenu && (
-              <div className="absolute right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-20 min-w-[180px]">
-                <div className="p-2 border-b border-gray-700">
-                  <div className="text-sm text-gray-400 mb-1">排序方式</div>
-                  <div className="flex flex-col gap-1">
-                    <button
-                      onClick={() => {
-                        setSortBy('date');
-                        setShowSortMenu(false);
-                      }}
-                      className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${
-                        sortBy === 'date' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
-                      }`}
-                    >
-                      <FaCalendarAlt className="flex-shrink-0" />
-                      <span className="whitespace-nowrap">按日期</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortBy('status');
-                        setShowSortMenu(false);
-                      }}
-                      className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${
-                        sortBy === 'status' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
-                      }`}
-                    >
-                      <FaHeart className="flex-shrink-0" />
-                      <span className="whitespace-nowrap">按關係狀態</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="p-2">
-                  <div className="text-sm text-gray-400 mb-1">排序順序</div>
-                  <button
-                    onClick={() => {
-                      toggleSortOrder();
-                      setShowSortMenu(false);
-                    }}
-                    className="w-full px-3 py-1.5 rounded-md flex items-center gap-2 hover:bg-gray-700"
-                  >
-                    {sortOrder === 'desc' ? <FaSortAmountDown className="flex-shrink-0" /> : <FaSortAmountUp className="flex-shrink-0" />}
-                    <span className="whitespace-nowrap">{sortOrder === 'desc' ? '降序' : '升序'}</span>
-                  </button>
-                </div>
-              </div>
-            )}
+            {renderSortMenu()}
           </div>
           
           <button

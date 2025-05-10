@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FaUser, FaSignOutAlt, FaUserCircle, FaCloudUploadAlt, FaCloud, FaDesktop } from 'react-icons/fa';
 import { getCurrentUser, signOut } from '@/utils/supabase';
 import { User } from '@supabase/supabase-js';
@@ -14,6 +15,7 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   
   // 獲取當前用戶
   useEffect(() => {
@@ -66,6 +68,76 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
     return `${name.slice(0, 6)}...@${domain}`;
   };
   
+  // 獲取按鈕位置用於定位彈出選單
+  const getMenuPosition = () => {
+    if (!buttonRef.current) return { top: 0, right: 0 };
+    const rect = buttonRef.current.getBoundingClientRect();
+    return {
+      top: rect.bottom + window.scrollY + 8, // 按鈕底部 + 滾動偏移 + 間距
+      right: window.innerWidth - rect.right, // 視窗右側到按鈕右側的距離
+    };
+  };
+  
+  // 渲染選單彈出框
+  const renderMenu = () => {
+    if (!isMenuOpen) return null;
+    
+    const { top, right } = getMenuPosition();
+    
+    const menuContent = (
+      <div 
+        className="fixed w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-lg overflow-hidden z-[999]"
+        style={{ top: `${top}px`, right: `${right}px` }}
+        ref={menuRef}
+      >
+        <div className="p-4 border-b border-gray-800">
+          <div className="text-sm text-gray-400">已登入為</div>
+          <div className="font-medium truncate">{user.email}</div>
+        </div>
+        
+        <div className="p-2">
+          <button
+            onClick={onSyncData}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors"
+          >
+            {dataMode === 'local' ? (
+              <>
+                <FaCloudUploadAlt size={16} className="text-primary" />
+                <span>同步數據到雲端</span>
+              </>
+            ) : (
+              <>
+                <FaCloud size={16} className="text-primary" />
+                <span>同步狀態: 已啟用</span>
+              </>
+            )}
+          </button>
+          
+          {dataMode === 'cloud' && (
+            <button
+              onClick={() => {}} // 這裡可以添加切換到本地模式的功能
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors"
+            >
+              <FaDesktop size={16} />
+              <span>切換到本地模式</span>
+            </button>
+          )}
+          
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors text-red-400"
+          >
+            <FaSignOutAlt size={16} />
+            <span>登出</span>
+          </button>
+        </div>
+      </div>
+    );
+    
+    // 使用Portal將選單渲染到body上
+    return typeof document !== 'undefined' ? createPortal(menuContent, document.body) : null;
+  };
+  
   if (loading) {
     return (
       <button className="p-2 rounded-full hover:bg-gray-800 transition-colors">
@@ -87,8 +159,9 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
   }
   
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative">
       <button
+        ref={buttonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 text-white rounded-full transition-colors"
       >
@@ -96,51 +169,7 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
         <span>{user.email ? formatEmail(user.email) : '用戶'}</span>
       </button>
       
-      {isMenuOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-lg overflow-hidden z-10">
-          <div className="p-4 border-b border-gray-800">
-            <div className="text-sm text-gray-400">已登入為</div>
-            <div className="font-medium truncate">{user.email}</div>
-          </div>
-          
-          <div className="p-2">
-            <button
-              onClick={onSyncData}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors"
-            >
-              {dataMode === 'local' ? (
-                <>
-                  <FaCloudUploadAlt size={16} className="text-primary" />
-                  <span>同步數據到雲端</span>
-                </>
-              ) : (
-                <>
-                  <FaCloud size={16} className="text-primary" />
-                  <span>同步狀態: 已啟用</span>
-                </>
-              )}
-            </button>
-            
-            {dataMode === 'cloud' && (
-              <button
-                onClick={() => {}} // 這裡可以添加切換到本地模式的功能
-                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors"
-              >
-                <FaDesktop size={16} />
-                <span>切換到本地模式</span>
-              </button>
-            )}
-            
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors text-red-400"
-            >
-              <FaSignOutAlt size={16} />
-              <span>登出</span>
-            </button>
-          </div>
-        </div>
-      )}
+      {renderMenu()}
     </div>
   );
 };
