@@ -322,7 +322,7 @@ export default function Home() {
             </button>
             
             {showSortMenu && (
-              <div className="absolute right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-20">
+              <div className="absolute right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-20 min-w-[180px]">
                 <div className="p-2 border-b border-gray-700">
                   <div className="text-sm text-gray-400 mb-1">排序方式</div>
                   <div className="flex flex-col gap-1">
@@ -335,8 +335,8 @@ export default function Home() {
                         sortBy === 'date' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
                       }`}
                     >
-                      <FaCalendarAlt />
-                      <span>按日期</span>
+                      <FaCalendarAlt className="flex-shrink-0" />
+                      <span className="whitespace-nowrap">按日期</span>
                     </button>
                     <button
                       onClick={() => {
@@ -347,8 +347,8 @@ export default function Home() {
                         sortBy === 'status' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
                       }`}
                     >
-                      <FaHeart />
-                      <span>按關係狀態</span>
+                      <FaHeart className="flex-shrink-0" />
+                      <span className="whitespace-nowrap">按關係狀態</span>
                     </button>
                   </div>
                 </div>
@@ -361,8 +361,8 @@ export default function Home() {
                     }}
                     className="w-full px-3 py-1.5 rounded-md flex items-center gap-2 hover:bg-gray-700"
                   >
-                    {sortOrder === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
-                    <span>{sortOrder === 'desc' ? '降序' : '升序'}</span>
+                    {sortOrder === 'desc' ? <FaSortAmountDown className="flex-shrink-0" /> : <FaSortAmountUp className="flex-shrink-0" />}
+                    <span className="whitespace-nowrap">{sortOrder === 'desc' ? '降序' : '升序'}</span>
                   </button>
                 </div>
               </div>
