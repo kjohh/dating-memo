@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
@@ -9,11 +9,13 @@ import {
   PRESET_PERSONALITY_TAGS,
   RELATIONSHIP_STATUSES,
   RELATIONSHIP_STATUS_DESCRIPTIONS,
-  RelationshipStatus
+  RelationshipStatus,
+  MEET_CHANNELS,
+  MeetChannel
 } from '@/types';
 import TagSelector from './TagSelector';
 import StarRating from './StarRating';
-import { FaTimes, FaUser, FaTags, FaFileAlt, FaCheck, FaTrash, FaHeart } from 'react-icons/fa';
+import { FaTimes, FaUser, FaTags, FaFileAlt, FaCheck, FaTrash, FaHeart, FaArrowLeft } from 'react-icons/fa';
 
 interface DatePersonFormProps {
   initialData?: Partial<DatePersonFormType>;
@@ -38,6 +40,11 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   const [currentTab, setCurrentTab] = useState<FormTab>('基本');
   const [meetChannel, setMeetChannel] = useState<MeetChannel | undefined>(undefined);
   const [otherChannel, setOtherChannel] = useState<string>('');
+  const [isTabSticky, setIsTabSticky] = useState(false);
+  
+  const headerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<DatePersonFormType>({
     resolver: zodResolver(datePersonFormSchema),
@@ -79,6 +86,37 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       }
     }
   }, [initialData, setValue]);
+  
+  // 處理滾動時標籤頁固定在頂部
+  useEffect(() => {
+    const handleScroll = () => {
+      if (tabsRef.current && headerRef.current) {
+        const tabsPosition = tabsRef.current.getBoundingClientRect().top;
+        if (tabsPosition <= 0 && !isTabSticky) {
+          setIsTabSticky(true);
+        } else if (tabsPosition > 0 && isTabSticky) {
+          setIsTabSticky(false);
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isTabSticky]);
+  
+  // 切換標籤頁時滾動到頂部
+  const handleTabChange = (tab: FormTab) => {
+    setCurrentTab(tab);
+    if (formRef.current && isTabSticky) {
+      const tabsOffset = isTabSticky ? 50 : 0; // 大約標籤頁的高度
+      window.scrollTo({
+        top: formRef.current.offsetTop + tabsOffset,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const positiveTags = watch('positiveTags');
   const negativeTags = watch('negativeTags');
@@ -131,35 +169,49 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-      <div className="relative">
+    <form ref={formRef} onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full md:h-auto">
+      {/* 頂部導航列 */}
+      <div ref={headerRef} className="sticky top-0 z-10 bg-gray-900 p-4 border-b border-gray-800 flex items-center">
         <button
           type="button"
           onClick={onCancel}
-          className="absolute right-0 top-0 p-2 text-gray-500 hover:text-error"
-          aria-label="關閉"
+          className="p-2 text-gray-400 hover:text-white mr-3"
+          aria-label="返回"
         >
-          <FaTimes size={20} />
+          <FaArrowLeft size={18} />
         </button>
         
-        <h2 className="text-2xl font-bold mb-6 gradient-text">
-          {initialData?.name ? `編輯 ${initialData.name} 的資料` : '新增約會對象'}
+        <h2 className="text-xl font-bold gradient-text flex-1">
+          {initialData?.name ? `${initialData.name}` : '新增約會對象'}
         </h2>
+        
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="p-2 text-error hover:text-red-600"
+            aria-label="刪除"
+          >
+            <FaTrash size={18} />
+          </button>
+        )}
       </div>
 
       {/* 標籤頁導航 */}
-      <div className="flex flex-wrap border-b border-gray-700 mb-6">
+      <div 
+        ref={tabsRef}
+        className={`flex bg-gray-900 border-b border-gray-800 ${isTabSticky ? 'sticky top-12 z-10' : ''}`}
+      >
         {tabs.map((tab) => (
           <button
             key={tab}
             type="button"
-            onClick={() => setCurrentTab(tab)}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            onClick={() => handleTabChange(tab)}
+            className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors flex-1 ${
               currentTab === tab 
                 ? 'text-primary border-b-2 border-primary -mb-px' 
                 : 'text-gray-500 hover:text-gray-300'
             }`}
-            style={{ width: `${100 / tabs.length}%` }}
           >
             {getTabIcon(tab)}
             <span>{tab}</span>
@@ -168,7 +220,7 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
       </div>
 
       {/* 標籤頁內容 */}
-      <div className="space-y-6">
+      <div className="flex-1 p-4 overflow-y-auto space-y-6">
         {/* 基本資訊 */}
         {currentTab === '基本' && (
           <div className="space-y-4">
@@ -411,17 +463,8 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
         )}
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
-        {onDelete && (
-          <button
-            type="button"
-            onClick={onDelete}
-            className="px-4 py-2 rounded-lg text-error hover:text-red-600 transition-colors mr-auto"
-          >
-            <FaTrash className="mr-1" />
-            <span>刪除</span>
-          </button>
-        )}
+      {/* 底部按鈕區域 */}
+      <div className="sticky bottom-0 bg-gray-900 p-4 border-t border-gray-800 flex justify-end gap-3">
         <button
           type="button"
           onClick={onCancel}

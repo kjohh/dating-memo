@@ -295,8 +295,8 @@ export default function Home() {
 
       {/* 添加/編輯表單模態框 */}
       {(showAddForm || editingPerson) && (
-        <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50">
-          <div className="bg-gray-900 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gray-900 w-full h-full md:rounded-xl md:max-w-2xl md:h-auto md:max-h-[90vh] overflow-y-auto">
             <DatePersonForm
               initialData={editingPerson || undefined}
               onSubmit={editingPerson ? handleUpdatePerson : handleAddPerson}

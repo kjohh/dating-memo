@@ -42,13 +42,6 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
     return colors[seed % colors.length];
   };
 
-  // 獲取幽默的標題前綴
-  const getHumorousPrefix = () => {
-    const prefixes = ['戀愛候選人', '心動對象', '緣分之人', '靈魂伴侶', '約會高手', '愛情冒險家'];
-    const seed = person.name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    return prefixes[seed % prefixes.length];
-  };
-
   // 獲取關係狀態圖標
   const getRelationshipIcon = () => {
     switch (person.relationshipStatus) {
@@ -70,7 +63,6 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
   };
 
   const meetChannel = getMeetChannel();
-  const prefix = getHumorousPrefix();
   const randomColor = getRandomColor();
 
   return (
@@ -92,7 +84,6 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
               )}
             </div>
           </div>
-          <p className="text-xs text-muted-text">{prefix}</p>
         </div>
         
         {/* 主要資訊區 */}
