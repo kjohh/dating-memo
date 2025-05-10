@@ -10,8 +10,6 @@ import {
   RELATIONSHIP_STATUSES,
   RELATIONSHIP_STATUS_DESCRIPTIONS,
   RelationshipStatus,
-  MEET_CHANNELS,
-  MeetChannel
 } from '@/types';
 import TagSelector from './TagSelector';
 import StarRating from './StarRating';
