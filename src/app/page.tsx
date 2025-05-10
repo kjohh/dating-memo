@@ -50,11 +50,14 @@ export default function Home() {
         
         if (user) {
           try {
-            const hasCloud = await hasCloudData(user.id);
-            
+            // 檢查本地存儲的數據模式
             const storedDataMode = localStorage.getItem('dataMode');
             
-            if (hasCloud && storedDataMode === 'cloud') {
+            // 檢查是否有雲端數據
+            const hasCloud = await hasCloudData(user.id);
+            
+            // 如果用戶已經選擇了雲端模式，直接使用
+            if (storedDataMode === 'cloud') {
               setDataMode('cloud');
               loadCloudData(user.id).catch(err => {
                 console.error('加載雲端數據失敗:', err);
@@ -63,7 +66,9 @@ export default function Home() {
                 localStorage.setItem('dataMode', 'local');
                 showSyncNotification('error', '無法連接雲端，已切換到本地模式');
               });
-            } else if (hasCloud) {
+            } 
+            // 如果有雲端數據但用戶沒有明確選擇過數據模式，才顯示提示
+            else if (hasCloud && !storedDataMode) {
               showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
                 setDataMode('cloud');
                 localStorage.setItem('dataMode', 'cloud');
@@ -74,6 +79,10 @@ export default function Home() {
                   showSyncNotification('error', '無法連接雲端，已切換到本地模式');
                 });
               });
+            }
+            // 如果用戶明確選擇了本地模式，尊重用戶選擇
+            else if (storedDataMode === 'local') {
+              setDataMode('local');
             }
           } catch (cloudError) {
             console.error('檢查雲端數據時出錯:', cloudError);
@@ -233,6 +242,7 @@ export default function Home() {
           }
         }
       } else {
+        // 已經在雲端模式
         loadCloudData(user.id);
         showSyncNotification('success', '已重新載入雲端數據');
       }
@@ -523,11 +533,12 @@ export default function Home() {
           localStorage.setItem('dataMode', 'cloud');
           
           showSyncNotification('success', result.message);
-    } else {
+        } else {
           showSyncNotification('error', result.message);
         }
       }
     } catch (error) {
+      console.error('同步過程中出錯:', error);
       showSyncNotification('error', '同步過程中發生錯誤，請稍後再試');
     } finally {
       setIsLoading(false);
@@ -542,23 +553,34 @@ export default function Home() {
       if (user) {
         setIsLoggedIn(true);
         
-        // 檢查是否有雲端數據
-        const hasCloud = await hasCloudData(user.id);
+        // 檢查本地存儲的數據模式
+        const storedDataMode = localStorage.getItem('dataMode');
         
-        if (hasCloud) {
-          // 如果有雲端數據，詢問是否切換到雲端模式
-          showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
-            setDataMode('cloud');
-            localStorage.setItem('dataMode', 'cloud');
-            loadCloudData(user.id);
-          });
-        } else if (datePersons.length > 0) {
-          // 如果沒有雲端數據但有本地數據，詢問是否同步到雲端
-          setShowSyncConfirm(true);
+        // 只有在沒有明確設定數據模式的情況下才檢查雲端數據並提示
+        if (!storedDataMode) {
+          // 檢查是否有雲端數據
+          const hasCloud = await hasCloudData(user.id);
+          
+          if (hasCloud) {
+            // 如果有雲端數據，詢問是否切換到雲端模式
+            showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
+              setDataMode('cloud');
+              localStorage.setItem('dataMode', 'cloud');
+              loadCloudData(user.id);
+            });
+          } else if (datePersons.length > 0) {
+            // 如果沒有雲端數據但有本地數據，詢問是否同步到雲端
+            setShowSyncConfirm(true);
+          }
+        } 
+        // 如果用戶已經選擇了雲端模式，直接加載雲端數據
+        else if (storedDataMode === 'cloud') {
+          setDataMode('cloud');
+          loadCloudData(user.id);
         }
       }
     } catch (error) {
-      // 錯誤處理
+      console.error('處理用戶登入事件失敗:', error);
     }
   }, [datePersons.length, loadCloudData, showSyncNotification]);
 
@@ -568,6 +590,16 @@ export default function Home() {
       handleUserLogin();
     }
   }, [isLoggedIn, handleUserLogin]);
+
+  // 清除同步消息
+  useEffect(() => {
+    return () => {
+      // 組件卸載時清除任何顯示中的同步通知
+      if (syncMessage.show) {
+        setSyncMessage(prev => ({ ...prev, show: false }));
+      }
+    };
+  }, [syncMessage.show]);
 
   return (
     <main className="min-h-screen text-white">
