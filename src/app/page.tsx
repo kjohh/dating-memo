@@ -136,44 +136,32 @@ export default function Home() {
     const syncDataOnModeChange = async () => {
       if (dataMode === 'cloud' && isLoggedIn) {
         try {
-          console.log('檢測到模式切換為雲端模式');
           const user = await getCurrentUser();
           if (user) {
-            console.log('當前登入用戶:', user.id);
-            
             // 檢查是否已有雲端數據
             const hasCloud = await hasCloudData(user.id);
-            console.log('用戶是否有雲端數據:', hasCloud);
             
             if (!hasCloud && datePersons.length > 0) {
-              console.log('開始遷移本地數據到雲端:', datePersons.length, '條記錄');
-              
               // 如果沒有雲端數據但有本地數據，自動同步
               const result = await migrateLocalDataToCloud(user.id);
-              console.log('遷移結果:', result);
               
               if (result.success) {
                 showSyncNotification('success', `已自動同步 ${datePersons.length} 筆數據到雲端`);
               } else {
-                console.error('遷移失敗:', result.message);
                 showSyncNotification('error', `自動同步失敗: ${result.message}`);
               }
             } else if (hasCloud) {
-              console.log('加載雲端數據');
               // 如果已有雲端數據，加載雲端數據
               const { data, success, message } = await fetchCloudData(user.id);
               
               if (success && data) {
-                console.log('成功加載雲端數據:', data.length, '條記錄');
                 setDatePersons(data);
               } else {
-                console.error('加載雲端數據失敗:', message);
                 showSyncNotification('error', `加載雲端數據失敗: ${message}`);
               }
             }
           }
         } catch (error) {
-          console.error('模式切換時同步數據錯誤:', error);
           showSyncNotification('error', '模式切換時同步數據錯誤，請稍後再試');
         }
       }
@@ -446,7 +434,7 @@ export default function Home() {
                 }
                 closeSyncMessage();
               }}
-              className="px-3 py-1 rounded-md bg-primary text-white text-sm"
+              className="px-3 py-1 rounded-md bg-primary text-black text-sm font-medium"
             >
               確認
             </button>
@@ -474,11 +462,9 @@ export default function Home() {
   
   const confirmSyncModeChange = async () => {
     try {
-      console.log('用戶確認同步並切換到雲端模式');
       const user = await getCurrentUser();
       
       if (!user) {
-        console.error('無法獲取當前用戶');
         return;
       }
       
@@ -486,15 +472,12 @@ export default function Home() {
       
       // 檢查用戶是否已有雲端數據
       const hasCloud = await hasCloudData(user.id);
-      console.log('用戶是否有雲端數據:', hasCloud);
       
       if (hasCloud) {
-        console.log('發現雲端數據，準備合併');
         // 如果有雲端數據，需要合併
         const { success, data, message } = await mergeLocalAndCloudData(user.id);
         
         if (success) {
-          console.log('合併成功:', message);
           // 更新本地顯示的數據
           if (data) setDatePersons(data);
           
@@ -504,14 +487,11 @@ export default function Home() {
           
           showSyncNotification('success', message);
         } else {
-          console.error('合併失敗:', message);
           showSyncNotification('error', message);
         }
       } else {
-        console.log('無雲端數據，直接遷移本地數據');
         // 如果沒有雲端數據，直接遷移
         const result = await migrateLocalDataToCloud(user.id);
-        console.log('遷移結果:', result);
         
         if (result.success) {
           // 切換到雲端模式
@@ -520,12 +500,10 @@ export default function Home() {
           
           showSyncNotification('success', result.message);
         } else {
-          console.error('遷移失敗:', result.message);
           showSyncNotification('error', result.message);
         }
       }
     } catch (error) {
-      console.error('確認同步模式變更時出錯:', error);
       showSyncNotification('error', '同步過程中發生錯誤，請稍後再試');
     } finally {
       setIsLoading(false);
@@ -536,33 +514,27 @@ export default function Home() {
   // 處理用戶登入事件
   const handleUserLogin = useCallback(async () => {
     try {
-      console.log('處理用戶登入事件');
       const user = await getCurrentUser();
       if (user) {
-        console.log('用戶已登入:', user.id);
         setIsLoggedIn(true);
         
         // 檢查是否有雲端數據
         const hasCloud = await hasCloudData(user.id);
-        console.log('用戶是否有雲端數據:', hasCloud);
         
         if (hasCloud) {
-          console.log('發現雲端數據，詢問是否切換模式');
           // 如果有雲端數據，詢問是否切換到雲端模式
           showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
-            console.log('用戶確認切換到雲端模式');
             setDataMode('cloud');
             localStorage.setItem('dataMode', 'cloud');
             loadCloudData(user.id);
           });
         } else if (datePersons.length > 0) {
-          console.log('發現本地數據，顯示同步確認對話框');
           // 如果沒有雲端數據但有本地數據，詢問是否同步到雲端
           setShowSyncConfirm(true);
         }
       }
     } catch (error) {
-      console.error('處理用戶登入事件錯誤:', error);
+      // 錯誤處理
     }
   }, [datePersons.length, loadCloudData, showSyncNotification]);
 
