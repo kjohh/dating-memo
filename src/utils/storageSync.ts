@@ -2,6 +2,13 @@ import { supabase } from './supabase';
 import { getAllDatePersons } from './storage';
 import { DatePerson } from '@/types';
 
+// 檢查Supabase環境變數
+const isSuapabaseConfigured = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return Boolean(url && key);
+};
+
 // 實際表名
 const TABLE_NAME = 'dating_persons';
 
@@ -31,6 +38,10 @@ const formatForCloud = (person: DatePerson, userId: string) => {
 
 // 將一個新的約會對象添加到雲端
 export const addToCloud = async (person: DatePerson, userId: string) => {
+  if (!isSuapabaseConfigured()) {
+    return { success: false, message: '未配置Supabase環境變數，無法連接雲端' };
+  }
+  
   try {
     const formattedPerson = formatForCloud(person, userId);
     
@@ -52,6 +63,10 @@ export const addToCloud = async (person: DatePerson, userId: string) => {
 
 // 更新雲端中的約會對象
 export const updateInCloud = async (person: DatePerson, userId: string) => {
+  if (!isSuapabaseConfigured()) {
+    return { success: false, message: '未配置Supabase環境變數，無法連接雲端' };
+  }
+  
   try {
     const formattedPerson = formatForCloud(person, userId);
     
@@ -74,6 +89,10 @@ export const updateInCloud = async (person: DatePerson, userId: string) => {
 
 // 從雲端刪除約會對象
 export const deleteFromCloud = async (personId: string, userId: string) => {
+  if (!isSuapabaseConfigured()) {
+    return { success: false, message: '未配置Supabase環境變數，無法連接雲端' };
+  }
+  
   try {
     const { error } = await supabase
       .from(TABLE_NAME)
@@ -95,6 +114,10 @@ export const deleteFromCloud = async (personId: string, userId: string) => {
 
 // 將本地數據遷移到雲端
 export const migrateLocalDataToCloud = async (userId: string) => {
+  if (!isSuapabaseConfigured()) {
+    return { success: false, message: '未配置Supabase環境變數，無法連接雲端' };
+  }
+  
   try {
     // 獲取本地數據
     const localData = getAllDatePersons();
@@ -127,6 +150,10 @@ export const migrateLocalDataToCloud = async (userId: string) => {
 
 // 從雲端獲取數據
 export const fetchCloudData = async (userId: string) => {
+  if (!isSuapabaseConfigured()) {
+    return { success: false, data: [], message: '未配置Supabase環境變數，無法連接雲端' };
+  }
+  
   try {
     const { data, error } = await supabase
       .from(TABLE_NAME)
@@ -171,6 +198,10 @@ export const fetchCloudData = async (userId: string) => {
 
 // 檢查用戶是否有雲端數據
 export const hasCloudData = async (userId: string) => {
+  if (!isSuapabaseConfigured()) {
+    return false;
+  }
+  
   try {
     const { data, error } = await supabase
       .from(TABLE_NAME)

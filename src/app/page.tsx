@@ -14,6 +14,9 @@ import UserMenu from '@/components/UserMenu';
 import { getCurrentUser } from '@/utils/supabase';
 import { migrateLocalDataToCloud, fetchCloudData, hasCloudData, mergeLocalAndCloudData, addToCloud, updateInCloud, deleteFromCloud } from '@/utils/storageSync';
 
+// 確保首頁也是動態的，避免在構建時預渲染失敗
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const [datePersons, setDatePersons] = useState<DatePerson[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -46,23 +49,44 @@ export default function Home() {
         setIsLoggedIn(!!user);
         
         if (user) {
-          const hasCloud = await hasCloudData(user.id);
-          
-          const storedDataMode = localStorage.getItem('dataMode');
-          
-          if (hasCloud && storedDataMode === 'cloud') {
-            setDataMode('cloud');
-            loadCloudData(user.id);
-          } else if (hasCloud) {
-            showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
+          try {
+            const hasCloud = await hasCloudData(user.id);
+            
+            const storedDataMode = localStorage.getItem('dataMode');
+            
+            if (hasCloud && storedDataMode === 'cloud') {
               setDataMode('cloud');
-              localStorage.setItem('dataMode', 'cloud');
-              loadCloudData(user.id);
-            });
+              loadCloudData(user.id).catch(err => {
+                console.error('加載雲端數據失敗:', err);
+                // 如果雲端數據加載失敗，回退到本地模式
+                setDataMode('local');
+                localStorage.setItem('dataMode', 'local');
+                showSyncNotification('error', '無法連接雲端，已切換到本地模式');
+              });
+            } else if (hasCloud) {
+              showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
+                setDataMode('cloud');
+                localStorage.setItem('dataMode', 'cloud');
+                loadCloudData(user.id).catch(err => {
+                  console.error('加載雲端數據失敗:', err);
+                  setDataMode('local');
+                  localStorage.setItem('dataMode', 'local');
+                  showSyncNotification('error', '無法連接雲端，已切換到本地模式');
+                });
+              });
+            }
+          } catch (cloudError) {
+            console.error('檢查雲端數據時出錯:', cloudError);
+            // 如果無法檢查雲端數據，默認使用本地模式
+            setDataMode('local');
+            localStorage.setItem('dataMode', 'local');
           }
         }
       } catch (error) {
         console.error('檢查登入狀態失敗:', error);
+        // 在登入檢查失敗時，確保使用本地模式
+        setDataMode('local');
+        localStorage.setItem('dataMode', 'local');
       }
     };
     
@@ -72,8 +96,8 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       if (dataMode === 'local' || !isLoggedIn) {
-        const data = getAllDatePersons();
-        setDatePersons(data);
+      const data = getAllDatePersons();
+      setDatePersons(data);
       }
     };
 
@@ -85,20 +109,20 @@ export default function Home() {
       window.removeEventListener('storage', loadData);
     };
   }, [dataMode, isLoggedIn]);
-  
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
         setShowSortMenu(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
+
   const closeSyncMessage = () => {
     setSyncMessage(prev => ({ ...prev, show: false }));
   };
@@ -266,7 +290,7 @@ export default function Home() {
     setPersonToDelete(id);
     setShowDeleteConfirm(true);
   };
-  
+
   const confirmDelete = async () => {
     if (personToDelete) {
       deleteDatePerson(personToDelete);
@@ -499,7 +523,7 @@ export default function Home() {
           localStorage.setItem('dataMode', 'cloud');
           
           showSyncNotification('success', result.message);
-        } else {
+    } else {
           showSyncNotification('error', result.message);
         }
       }
@@ -561,7 +585,7 @@ export default function Home() {
           />
         </div>
       </header>
-      
+
       <div className="sticky top-14 z-10 backdrop-blur-sm p-4 border-b border-gray-800/50">
         <div className="container mx-auto flex justify-between gap-3">
           <div className="relative flex-1">
@@ -599,35 +623,35 @@ export default function Home() {
           </button>
         </div>
       </div>
-      
+
       <div className="container mx-auto px-4 py-6">
-        {filteredAndSortedPersons.length === 0 ? (
+      {filteredAndSortedPersons.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-white">
-            <Image 
-              src="/welcome.jpg" 
+                <Image 
+                  src="/welcome.jpg" 
               alt="No data" 
               width={400} 
               height={400} 
               className="mb-6"
             />
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="btn-primary"
-            >
-              <FaPlus />
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="btn-primary"
+              >
+                <FaPlus />
               <span>新增約會對象</span>
-            </button>
-          </div>
-        ) : (
+              </button>
+        </div>
+      ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAndSortedPersons.map(person => (
-              <DatePersonCard
-                key={person.id}
-                person={person}
-                onClick={() => setEditingPerson(person)}
-              />
-            ))}
-          </div>
+          {filteredAndSortedPersons.map(person => (
+            <DatePersonCard
+              key={person.id}
+              person={person}
+              onClick={() => setEditingPerson(person)}
+            />
+          ))}
+        </div>
         )}
       </div>
       
@@ -639,7 +663,7 @@ export default function Home() {
       )}
       
       {editingPerson && (
-        <DatePersonForm
+            <DatePersonForm
           initialData={editingPerson}
           onSubmit={(data) => handleEditPerson(editingPerson.id, data)}
           onCancel={handleCancelForm}
