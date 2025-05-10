@@ -281,7 +281,7 @@ export default function Home() {
   
   return (
     <main className="min-h-screen text-white">
-      <header className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-4 py-3">
+      <header className="sticky top-0 z-10 backdrop-blur-sm border-b border-gray-800/50 px-4 py-3">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <FaHeart className="text-primary" />
@@ -296,7 +296,7 @@ export default function Home() {
         </div>
       </header>
       
-      <div className="sticky top-14 z-10 bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-800">
+      <div className="sticky top-14 z-10 backdrop-blur-sm p-4 border-b border-gray-800/50">
         <div className="container mx-auto flex justify-between gap-3">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

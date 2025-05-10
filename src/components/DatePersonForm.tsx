@@ -38,7 +38,6 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   const [currentTab, setCurrentTab] = useState<FormTab>('基本');
   const [meetChannel, setMeetChannel] = useState<MeetChannel | undefined>(undefined);
   const [otherChannel, setOtherChannel] = useState<string>('');
-  const [isTabSticky, setIsTabSticky] = useState(false);
   
   const headerRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -85,35 +84,9 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
     }
   }, [initialData, setValue]);
   
-  // 處理滾動時標籤頁固定在頂部
-  useEffect(() => {
-    const handleScroll = () => {
-      if (tabsRef.current && headerRef.current) {
-        const tabsPosition = tabsRef.current.getBoundingClientRect().top;
-        if (tabsPosition <= 0 && !isTabSticky) {
-          setIsTabSticky(true);
-        } else if (tabsPosition > 0 && isTabSticky) {
-          setIsTabSticky(false);
-        }
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isTabSticky]);
-  
-  // 切換標籤頁時滾動到頂部
+  // 切換標籤頁
   const handleTabChange = (tab: FormTab) => {
     setCurrentTab(tab);
-    if (formRef.current && isTabSticky) {
-      const tabsOffset = isTabSticky ? 50 : 0; // 大約標籤頁的高度
-      window.scrollTo({
-        top: formRef.current.offsetTop + tabsOffset,
-        behavior: 'smooth'
-      });
-    }
   };
 
   const positiveTags = watch('positiveTags');
@@ -168,56 +141,59 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-70 overflow-y-auto">
-      <div className="min-h-screen flex flex-col md:items-center md:justify-center p-0 md:p-4">
-        <div className="w-full md:max-w-3xl bg-gray-900 md:rounded-lg shadow-xl">
-          <form ref={formRef} onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full md:h-auto">
-            {/* 頂部導航列 */}
-            <div ref={headerRef} className="sticky top-0 z-10 bg-gray-900 p-4 border-b border-gray-800 flex items-center md:rounded-t-lg">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="p-2 text-gray-400 hover:text-white mr-3"
-                aria-label="返回"
-              >
-                <FaArrowLeft size={18} />
-              </button>
-              
-              <h2 className="text-xl font-bold gradient-text flex-1">
-                {initialData?.name ? `${initialData.name}` : '新增約會對象'}
-              </h2>
-              
-              {initialData && (
+      <div className="min-h-screen flex flex-col md:items-center md:justify-center p-0">
+        <div className="w-full h-full md:max-w-3xl md:h-auto bg-gray-900 md:rounded-lg shadow-xl">
+          <form ref={formRef} onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-screen md:h-auto">
+            {/* 頂部導航列 和 標籤頁導航 - 組合在一起固定在頂部 */}
+            <div className="sticky top-0 z-20 bg-gray-900">
+              {/* 頂部導航列 */}
+              <div ref={headerRef} className="p-4 border-b border-gray-800 flex items-center md:rounded-t-lg">
                 <button
                   type="button"
-                  onClick={onDelete}
-                  className="p-2 text-error hover:text-red-600"
-                  aria-label="刪除"
+                  onClick={onCancel}
+                  className="p-2 text-gray-400 hover:text-white mr-3"
+                  aria-label="返回"
                 >
-                  <FaTrash size={18} />
+                  <FaArrowLeft size={18} />
                 </button>
-              )}
-            </div>
+                
+                <h2 className="text-xl font-bold gradient-text flex-1">
+                  {initialData?.name ? `${initialData.name}` : '新增約會對象'}
+                </h2>
+                
+                {initialData && (
+                  <button
+                    type="button"
+                    onClick={onDelete}
+                    className="p-2 text-error hover:text-red-600"
+                    aria-label="刪除"
+                  >
+                    <FaTrash size={18} />
+                  </button>
+                )}
+              </div>
 
-            {/* 標籤頁導航 */}
-            <div 
-              ref={tabsRef}
-              className={`flex justify-around border-b border-gray-800 bg-gray-900 ${isTabSticky ? 'sticky top-[62px]' : ''} z-10`}
-            >
-              {tabs.map(tab => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => handleTabChange(tab)}
-                  className={`flex-1 flex items-center justify-center py-3 px-4 ${
-                    currentTab === tab
-                      ? 'text-accent border-b-2 border-accent font-medium'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <span className="mr-2">{getTabIcon(tab)}</span>
-                  <span>{tab}</span>
-                </button>
-              ))}
+              {/* 標籤頁導航 */}
+              <div 
+                ref={tabsRef}
+                className="flex justify-around border-b border-gray-800 bg-gray-900"
+              >
+                {tabs.map(tab => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => handleTabChange(tab)}
+                    className={`flex-1 flex items-center justify-center py-3 px-4 ${
+                      currentTab === tab
+                        ? 'text-accent border-b-2 border-accent font-medium'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <span className="mr-2">{getTabIcon(tab)}</span>
+                    <span>{tab}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* 標籤頁內容 */}
