@@ -150,7 +150,7 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
     return (
       <button 
         onClick={onLoginClick}
-        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary hover:bg-primary-dark text-white rounded-full transition-colors"
+        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary hover:bg-primary-dark text-black rounded-full transition-colors"
       >
         <FaUser size={14} />
         <span>登入</span>

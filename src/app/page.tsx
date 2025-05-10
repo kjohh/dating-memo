@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt, FaFilter, FaEllipsisV } from 'react-icons/fa';
+import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt, FaFilter, FaEllipsisV, FaTimes, FaSpinner } from 'react-icons/fa';
 import { DatePerson, DatePersonForm as DatePersonFormData, RELATIONSHIP_STATUSES } from '@/types';
 import { getAllDatePersons, addDatePerson, updateDatePerson, deleteDatePerson } from '@/utils/storage';
 import DatePersonCard from '@/components/DatePersonCard';
@@ -32,6 +32,8 @@ export default function Home() {
     type: 'success' | 'error' | 'info';
     message: string;
   }>({ show: false, type: 'info', message: '' });
+  const [showSyncConfirm, setShowSyncConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const sortMenuRef = useRef<HTMLDivElement>(null);
   const sortButtonRef = useRef<HTMLButtonElement>(null);
@@ -350,6 +352,45 @@ export default function Home() {
     );
   };
   
+  useEffect(() => {
+    const checkAndPromptSync = async () => {
+      const user = await getCurrentUser();
+      if (user && datePersons.length > 0) {
+        const hasCloudDataResult = await hasCloudData(user.id);
+        
+        if (!hasCloudDataResult) {
+          console.log('檢測到登入用戶有本地數據但無雲端數據，顯示同步提示');
+          setShowSyncConfirm(true);
+        }
+      }
+    };
+    
+    checkAndPromptSync();
+  }, [datePersons.length]);
+  
+  const confirmSync = async () => {
+    const user = await getCurrentUser();
+    
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const result = await migrateLocalDataToCloud(user.id);
+      setShowSyncConfirm(false);
+      
+      if (result.success) {
+        showSyncNotification('success', result.message);
+      } else {
+        showSyncNotification('error', result.message);
+      }
+    } catch (error) {
+      console.error('同步數據時出錯:', error);
+      showSyncNotification('error', '同步過程中發生錯誤，請稍後再試');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <main className="min-h-screen text-white">
       <header className="sticky top-0 z-10 backdrop-blur-sm border-b border-gray-800/50 px-4 py-3">
@@ -468,6 +509,52 @@ export default function Home() {
       />
       
       {renderSyncNotification()}
+      
+      {showSyncConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="w-full max-w-md p-6 mx-4 rounded-lg bg-gray-900 border border-gray-800">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">同步資料</h2>
+              <button
+                onClick={() => setShowSyncConfirm(false)}
+                className="p-2 rounded-full hover:bg-gray-800 transition-colors"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+            
+            <p className="text-gray-300 mb-4">
+              檢測到您的本地已有 <span className="font-bold text-primary">{datePersons.length}</span> 筆約會記錄。
+            </p>
+            <p className="text-gray-400 mb-6">
+              是否要將這些資料同步到雲端，以便在其他裝置上訪問？
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowSyncConfirm(false)}
+                className="flex-1 py-2 px-4 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+              >
+                稍後再說
+              </button>
+              <button
+                onClick={confirmSync}
+                disabled={isLoading}
+                className="flex-1 bg-primary hover:bg-primary-dark text-black py-2 px-4 rounded-lg transition-colors disabled:opacity-70 flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    同步中...
+                  </>
+                ) : (
+                  '同步到雲端'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

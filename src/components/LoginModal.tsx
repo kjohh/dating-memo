@@ -9,10 +9,8 @@ interface LoginModalProps {
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [step, setStep] = useState<'form' | 'otp' | 'success'>('form');
+  const [step, setStep] = useState<'form' | 'check_email'>('form');
   const [error, setError] = useState<string | null>(null);
   
   if (!isOpen) return null;
@@ -35,47 +33,12 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         throw error;
       }
       
-      // 成功發送驗證碼，進入下一步
-      setStep('otp');
+      // 成功發送魔法連結，進入檢查郵箱步驟
+      setStep('check_email');
     } catch (err: any) {
-      setError(err.message || '發送驗證碼時出錯，請稍後再試');
+      setError(err.message || '發送登入連結時出錯，請稍後再試');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-  
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    if (!otp || otp.length < 6) {
-      setError('請輸入有效的驗證碼');
-      return;
-    }
-    
-    setIsVerifying(true);
-    
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email'
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // 驗證成功
-      setStep('success');
-      // 短暫顯示成功訊息後關閉模態框
-      setTimeout(() => {
-        onClose();
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || '驗證碼無效，請重新輸入');
-    } finally {
-      setIsVerifying(false);
     }
   };
   
@@ -84,9 +47,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       <div className="w-full max-w-md p-6 mx-4 rounded-lg bg-gray-900 border border-gray-800">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-white">
-            {step === 'form' ? '登入/註冊' : 
-             step === 'otp' ? '輸入驗證碼' : 
-             '登入成功'}
+            {step === 'form' ? '登入/註冊' : '檢查您的郵箱'}
           </h2>
           <button
             onClick={onClose}
@@ -99,7 +60,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         {step === 'form' ? (
           <>
             <p className="text-gray-400 mb-6">
-              使用電子郵件登入，無需密碼！我們將發送一個驗證碼到您的郵箱。
+              使用電子郵件登入，無需密碼！我們將發送一個登入連結到您的郵箱。
             </p>
             
             <form onSubmit={handleSubmit}>
@@ -133,7 +94,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-primary hover:bg-primary-dark text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-70"
+                className="w-full bg-primary hover:bg-primary-dark text-black py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-70"
               >
                 {isSubmitting ? (
                   <>
@@ -141,72 +102,14 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                     正在發送...
                   </>
                 ) : (
-                  '發送驗證碼'
+                  '發送登入連結'
                 )}
               </button>
             </form>
             
             <p className="mt-6 text-sm text-center text-gray-500">
-              無需密碼！我們將發送一個驗證碼到您的郵箱，輸入即可登入。
+              無需密碼！我們將發送一個登入連結到您的郵箱，點擊即可登入。
             </p>
-          </>
-        ) : step === 'otp' ? (
-          <>
-            <div className="mb-4">
-              <button 
-                onClick={() => setStep('form')}
-                className="flex items-center text-gray-400 hover:text-white transition-colors"
-              >
-                <FaArrowLeft className="mr-1" /> 返回
-              </button>
-            </div>
-            
-            <p className="text-gray-400 mb-6">
-              我們已發送驗證碼到：<span className="font-bold text-white">{email}</span>
-            </p>
-            
-            <form onSubmit={handleVerifyOtp}>
-              <div className="mb-4">
-                <label htmlFor="otp" className="block text-sm font-medium mb-1 text-gray-300">
-                  驗證碼
-                </label>
-                <input
-                  type="text"
-                  id="otp"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-lg tracking-wider"
-                  placeholder="請輸入6位驗證碼"
-                  disabled={isVerifying}
-                  maxLength={6}
-                  required
-                />
-                <p className="mt-2 text-sm text-gray-500">
-                  請檢查您的收件箱（包括垃圾郵件夾）
-                </p>
-              </div>
-              
-              {error && (
-                <div className="mb-4 p-3 bg-red-900/40 border border-red-800 rounded-lg text-red-300 text-sm">
-                  {error}
-                </div>
-              )}
-              
-              <button
-                type="submit"
-                disabled={isVerifying || otp.length !== 6}
-                className="w-full bg-primary hover:bg-primary-dark text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-70"
-              >
-                {isVerifying ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
-                    正在驗證...
-                  </>
-                ) : (
-                  '驗證並登入'
-                )}
-              </button>
-            </form>
           </>
         ) : (
           <div className="text-center">
@@ -214,11 +117,32 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
               <FaEnvelope size={24} />
             </div>
             <p className="text-gray-300 mb-4">
-              登入成功！
+              登入連結已發送！
             </p>
-            <p className="text-gray-400">
-              正在將您重定向到應用...
+            <p className="text-gray-400 mb-6">
+              我們已向 <span className="font-bold text-white">{email}</span> 發送了一封含有登入連結的郵件。
             </p>
+            <p className="text-gray-400 mb-4">
+              請前往您的郵箱，點擊郵件中的連結完成登入。
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              如果未收到郵件，請檢查垃圾郵件夾或者嘗試重新發送。
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setStep('form')}
+                className="flex-1 py-2 px-4 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+              >
+                返回
+              </button>
+              <button
+                onClick={onClose}
+                className="flex-1 bg-primary hover:bg-primary-dark text-black py-2 px-4 rounded-lg transition-colors"
+              >
+                關閉
+              </button>
+            </div>
           </div>
         )}
       </div>
