@@ -196,6 +196,7 @@ export default function Home() {
       setDatePersons(datePersons.filter(person => person.id !== personToDelete));
       setShowDeleteConfirm(false);
       setPersonToDelete(null);
+      setEditingPerson(null);
     }
   };
   
@@ -380,16 +381,14 @@ export default function Home() {
       
       <div className="container mx-auto px-4 py-6">
         {filteredAndSortedPersons.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+          <div className="flex flex-col items-center justify-center py-16 text-white">
             <Image 
-              src="/empty-state.svg" 
+              src="/welcome.jpg" 
               alt="No data" 
-              width={200} 
-              height={200} 
-              className="mb-6 opacity-60"
+              width={400} 
+              height={400} 
+              className="mb-6"
             />
-            <p className="text-lg mb-2">還沒有約會記錄</p>
-            <p className="mb-6">點擊右上角的「+」按鈕開始添加吧！</p>
             <button
               onClick={() => setShowAddForm(true)}
               className="btn-primary"
