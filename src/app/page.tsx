@@ -8,6 +8,10 @@ import DatePersonCard from '@/components/DatePersonCard';
 import DatePersonForm from '@/components/DatePersonForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import Image from 'next/image';
+import LoginModal from '@/components/LoginModal';
+import UserMenu from '@/components/UserMenu';
+import { getCurrentUser } from '@/utils/supabase';
+import { migrateLocalDataToCloud, fetchCloudData, hasCloudData, mergeLocalAndCloudData } from '@/utils/storageSync';
 
 export default function Home() {
   const [datePersons, setDatePersons] = useState<DatePerson[]>([]);
@@ -19,216 +23,347 @@ export default function Home() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dataMode, setDataMode] = useState<'local' | 'cloud'>('local');
+  const [syncMessage, setSyncMessage] = useState<{
+    show: boolean;
+    type: 'success' | 'error' | 'info';
+    message: string;
+  }>({ show: false, type: 'info', message: '' });
   
   const sortMenuRef = useRef<HTMLDivElement>(null);
 
-  // 加載數據
   useEffect(() => {
-    const loadData = () => {
-      const data = getAllDatePersons();
-      setDatePersons(data);
+    const checkLoginStatus = async () => {
+      try {
+        const user = await getCurrentUser();
+        setIsLoggedIn(!!user);
+        
+        if (user) {
+          const hasCloud = await hasCloudData(user.id);
+          
+          const storedDataMode = localStorage.getItem('dataMode');
+          
+          if (hasCloud && storedDataMode === 'cloud') {
+            setDataMode('cloud');
+            loadCloudData(user.id);
+          } else if (hasCloud) {
+            showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
+              setDataMode('cloud');
+              localStorage.setItem('dataMode', 'cloud');
+              loadCloudData(user.id);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('檢查登入狀態失敗:', error);
+      }
+    };
+    
+    checkLoginStatus();
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (dataMode === 'local' || !isLoggedIn) {
+        const data = getAllDatePersons();
+        setDatePersons(data);
+      }
     };
 
     loadData();
     
-    // 添加事件監聽器，以便在其他標籤頁中更新數據時刷新
     window.addEventListener('storage', loadData);
     
     return () => {
       window.removeEventListener('storage', loadData);
     };
-  }, []);
-
-  // 點擊外部關閉排序菜單
+  }, [dataMode, isLoggedIn]);
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
         setShowSortMenu(false);
       }
     };
-
+    
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  // 處理添加新約會對象
-  const handleAddPerson = (data: DatePersonFormData) => {
-    addDatePerson({
-      ...data,
-      positiveTags: data.positiveTags || [],
-      negativeTags: data.negativeTags || [],
-      personalityTags: data.personalityTags || [],
+  
+  const closeSyncMessage = () => {
+    setSyncMessage({ ...syncMessage, show: false });
+  };
+  
+  const showSyncNotification = (type: 'success' | 'error' | 'info', message: string, onConfirm?: () => void) => {
+    setSyncMessage({
+      show: true,
+      type,
+      message,
     });
     
-    setShowAddForm(false);
-    setDatePersons(getAllDatePersons());
+    if (type !== 'info') {
+      setTimeout(() => {
+        closeSyncMessage();
+      }, 5000);
+    }
   };
-
-  // 處理更新約會對象
-  const handleUpdatePerson = (data: DatePersonFormData) => {
-    if (editingPerson) {
-      updateDatePerson(editingPerson.id, {
-        ...data,
-        positiveTags: data.positiveTags || [],
-        negativeTags: data.negativeTags || [],
-        personalityTags: data.personalityTags || [],
-      });
+  
+  const loadCloudData = async (userId: string) => {
+    try {
+      const { success, data, message } = await fetchCloudData(userId);
       
-      setEditingPerson(null);
-      setDatePersons(getAllDatePersons());
+      if (success && data) {
+        setDatePersons(data);
+      } else {
+        console.error('加載雲端數據失敗:', message);
+      }
+    } catch (error) {
+      console.error('加載雲端數據出錯:', error);
+    }
+  };
+  
+  const handleSyncData = async () => {
+    try {
+      const user = await getCurrentUser();
+      
+      if (!user) {
+        setShowLoginModal(true);
+        return;
+      }
+      
+      if (dataMode === 'local') {
+        const hasCloud = await hasCloudData(user.id);
+        
+        if (hasCloud) {
+          showSyncNotification('info', '發現雲端數據。是否合併本地和雲端數據？', async () => {
+            const { success, message } = await mergeLocalAndCloudData(user.id);
+            
+            if (success) {
+              setDataMode('cloud');
+              localStorage.setItem('dataMode', 'cloud');
+              loadCloudData(user.id);
+              showSyncNotification('success', message);
+            } else {
+              showSyncNotification('error', message);
+            }
+            
+            closeSyncMessage();
+          });
+        } else {
+          const { success, message } = await migrateLocalDataToCloud(user.id);
+          
+          if (success) {
+            setDataMode('cloud');
+            localStorage.setItem('dataMode', 'cloud');
+            showSyncNotification('success', message);
+          } else {
+            showSyncNotification('error', message);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('同步數據失敗:', error);
+      showSyncNotification('error', '同步數據失敗，請稍後再試');
     }
   };
 
-  // 處理刪除約會對象
+  const handleAddPerson = (data: DatePersonFormData) => {
+    const newPerson = addDatePerson(data);
+    setDatePersons([...datePersons, newPerson]);
+    setShowAddForm(false);
+  };
+  
+  const handleEditPerson = (id: string, data: DatePersonFormData) => {
+    const updatedPerson = updateDatePerson(id, data);
+    if (updatedPerson) {
+      setDatePersons(datePersons.map(person => person.id === id ? updatedPerson : person));
+    }
+    setEditingPerson(null);
+  };
+  
   const handleDeletePerson = (id: string) => {
     setPersonToDelete(id);
     setShowDeleteConfirm(true);
   };
-
+  
   const confirmDelete = () => {
     if (personToDelete) {
       deleteDatePerson(personToDelete);
-      setEditingPerson(null);
-      setDatePersons(getAllDatePersons());
+      setDatePersons(datePersons.filter(person => person.id !== personToDelete));
       setShowDeleteConfirm(false);
       setPersonToDelete(null);
     }
   };
-
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-    setPersonToDelete(null);
-  };
-
-  // 過濾和排序約會對象
-  const filteredAndSortedPersons = datePersons
-    .filter(person => {
-      if (!searchTerm) return true;
-      
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        person.name.toLowerCase().includes(searchLower) ||
-        (person.occupation && person.occupation.toLowerCase().includes(searchLower)) ||
-        (person.meetChannel && person.meetChannel.toLowerCase().includes(searchLower)) ||
-        (person.relationshipStatus && person.relationshipStatus.includes(searchLower)) ||
-        [...person.positiveTags, ...person.negativeTags, ...person.personalityTags]
-          .some(tag => tag.toLowerCase().includes(searchLower))
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === 'date') {
-        const dateA = a.updatedAt.getTime();
-        const dateB = b.updatedAt.getTime();
-        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-      } else {
-        // 根據關係狀態排序
-        const statusA = RELATIONSHIP_STATUSES.indexOf(a.relationshipStatus);
-        const statusB = RELATIONSHIP_STATUSES.indexOf(b.relationshipStatus);
-        return sortOrder === 'desc' ? statusA - statusB : statusB - statusA;
-      }
-    });
-
-  // 獲取排序文字
-  const getSortText = () => {
-    if (sortBy === 'date') {
-      return sortOrder === 'desc' ? '最新優先' : '最早優先';
+  
+  const handleCancelForm = () => {
+    if (editingPerson) {
+      setEditingPerson(null);
     } else {
-      return sortOrder === 'desc' ? '關係進展由淺至深' : '關係進展由深至淺';
+      setShowAddForm(false);
     }
   };
-
+  
+  const filteredAndSortedPersons = datePersons
+    .filter(person => 
+      person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (person.occupation && person.occupation.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (person.notes && person.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (sortBy === 'date') {
+        return sortOrder === 'desc'
+          ? b.createdAt.getTime() - a.createdAt.getTime()
+          : a.createdAt.getTime() - b.createdAt.getTime();
+      } else {
+        const statusOrder = RELATIONSHIP_STATUSES.reduce((acc, status, index) => ({
+          ...acc,
+          [status]: index
+        }), {} as Record<string, number>);
+        
+        const aStatus = statusOrder[a.relationshipStatus] || 0;
+        const bStatus = statusOrder[b.relationshipStatus] || 0;
+        
+        return sortOrder === 'desc' ? aStatus - bStatus : bStatus - aStatus;
+      }
+    });
+  
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+  };
+  
+  const renderSyncNotification = () => {
+    if (!syncMessage.show) return null;
+    
+    const bgColors = {
+      success: 'bg-green-900/40 border-green-800',
+      error: 'bg-red-900/40 border-red-800',
+      info: 'bg-blue-900/40 border-blue-800',
+    };
+    
+    const textColors = {
+      success: 'text-green-300',
+      error: 'text-red-300',
+      info: 'text-blue-300',
+    };
+    
+    return (
+      <div className={`fixed bottom-4 right-4 max-w-sm p-4 rounded-lg ${bgColors[syncMessage.type]} border ${textColors[syncMessage.type]} z-50`}>
+        <div className="flex justify-between items-start">
+          <div className="flex-1">{syncMessage.message}</div>
+          <button onClick={closeSyncMessage} className="ml-4 text-white">×</button>
+        </div>
+        
+        {syncMessage.type === 'info' && (
+          <div className="mt-3 flex justify-end gap-2">
+            <button 
+              onClick={closeSyncMessage}
+              className="px-3 py-1 rounded-md bg-gray-800 text-white text-sm"
+            >
+              取消
+            </button>
+            <button 
+              onClick={() => {
+                closeSyncMessage();
+              }}
+              className="px-3 py-1 rounded-md bg-primary text-white text-sm"
+            >
+              確認
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
   return (
-    <main className="min-h-screen p-4 max-w-5xl mx-auto">
-      {/* 頭部 */}
-      <header className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2 gradient-text inline-block">
-          哥布林小抄
-        </h1>
-        <p className="text-gray-300">
-          記錄你的暈船對象，不放過每一個心動瞬間
-        </p>
+    <main className="min-h-screen text-white">
+      <header className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-4 py-3">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <FaHeart className="text-primary" />
+            <h1 className="text-xl md:text-2xl font-bold gradient-text">哥布林小抄</h1>
+          </div>
+          
+          <UserMenu 
+            onLoginClick={() => setShowLoginModal(true)} 
+            onSyncData={handleSyncData} 
+            dataMode={dataMode} 
+          />
+        </div>
       </header>
-
-      {/* 搜尋和排序 - 只在有資料時顯示 */}
-      {datePersons.length > 0 && (
-        <div className="flex gap-2 mb-6 items-center">
+      
+      <div className="sticky top-14 z-10 bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-800">
+        <div className="container mx-auto flex justify-between gap-3">
           <div className="relative flex-1">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-500" />
+            </div>
             <input
               type="text"
+              placeholder="搜尋..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜尋姓名、職業、標籤..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary text-gray-200"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-700 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
           
           <div className="relative" ref={sortMenuRef}>
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
-              className="p-2 rounded-lg border border-gray-700 bg-gray-800/70 hover:bg-gray-700 flex items-center justify-center text-gray-200"
-              aria-label="排序選項"
+              className="p-2 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 transition-colors flex items-center gap-2"
             >
               <FaFilter />
+              <span className="hidden sm:inline">排序</span>
             </button>
             
             {showSortMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg z-10 overflow-hidden">
-                <div className="p-2 border-b border-gray-700 text-sm font-medium text-gray-300">排序方式</div>
-                <button
-                  onClick={() => {
-                    setSortBy('date');
-                    setSortOrder('desc');
-                    setShowSortMenu(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
-                    sortBy === 'date' && sortOrder === 'desc' ? 'bg-gray-700' : ''
-                  }`}
-                >
-                  <FaSortAmountDown className="text-gray-400" />
-                  <span>最新優先</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSortBy('date');
-                    setSortOrder('asc');
-                    setShowSortMenu(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
-                    sortBy === 'date' && sortOrder === 'asc' ? 'bg-gray-700' : ''
-                  }`}
-                >
-                  <FaSortAmountUp className="text-gray-400" />
-                  <span>最早優先</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSortBy('status');
-                    setSortOrder('desc');
-                    setShowSortMenu(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
-                    sortBy === 'status' && sortOrder === 'desc' ? 'bg-gray-700' : ''
-                  }`}
-                >
-                  <FaHeart className="text-gray-400" />
-                  <span>關係進展由淺至深</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSortBy('status');
-                    setSortOrder('asc');
-                    setShowSortMenu(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 ${
-                    sortBy === 'status' && sortOrder === 'asc' ? 'bg-gray-700' : ''
-                  }`}
-                >
-                  <FaHeart className="text-gray-400" />
-                  <span>關係進展由深至淺</span>
-                </button>
+              <div className="absolute right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-20">
+                <div className="p-2 border-b border-gray-700">
+                  <div className="text-sm text-gray-400 mb-1">排序方式</div>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => {
+                        setSortBy('date');
+                        setShowSortMenu(false);
+                      }}
+                      className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${
+                        sortBy === 'date' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
+                      }`}
+                    >
+                      <FaCalendarAlt />
+                      <span>按日期</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSortBy('status');
+                        setShowSortMenu(false);
+                      }}
+                      className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${
+                        sortBy === 'status' ? 'bg-primary/20 text-primary' : 'hover:bg-gray-700'
+                      }`}
+                    >
+                      <FaHeart />
+                      <span>按關係狀態</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="p-2">
+                  <div className="text-sm text-gray-400 mb-1">排序順序</div>
+                  <button
+                    onClick={() => {
+                      toggleSortOrder();
+                      setShowSortMenu(false);
+                    }}
+                    className="w-full px-3 py-1.5 rounded-md flex items-center gap-2 hover:bg-gray-700"
+                  >
+                    {sortOrder === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
+                    <span>{sortOrder === 'desc' ? '降序' : '升序'}</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -238,86 +373,76 @@ export default function Home() {
             className="btn-primary"
           >
             <FaPlus />
-            <span className="hidden sm:inline">新增對象</span>
+            <span className="hidden sm:inline">新增</span>
           </button>
         </div>
-      )}
-
-      {/* 約會對象列表 */}
-      {filteredAndSortedPersons.length === 0 ? (
-        <div className="text-center py-12">
-          {searchTerm ? (
-            <div className="space-y-4">
-              <p className="text-gray-300 text-xl font-bold">沒有找到符合的約會對象，你確定有這個人嗎</p>
-              <div className="w-70 h-48 mx-auto">
-                <Image 
-                  src="/welcome.jpg" 
-                  alt="沒有找到符合的約會對象" 
-                  width={300} 
-                  height={200}
-                  className="w-full h-full"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <FaHeart className="text-primary mx-auto text-5xl heart-beat" />
-              <div className="w-70 h-48 mx-auto">
-                <Image 
-                  src="/welcome.jpg" 
-                  alt="還沒有約會對象" 
-                  width={300} 
-                  height={200}
-                  className="w-full h-full"
-                />
-              </div>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="btn-primary"
-              >
-                <FaPlus />
-                <span>新增第一個約會對象</span>
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedPersons.map(person => (
-            <DatePersonCard
-              key={person.id}
-              person={person}
-              onClick={() => setEditingPerson(person)}
+      </div>
+      
+      <div className="container mx-auto px-4 py-6">
+        {filteredAndSortedPersons.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+            <Image 
+              src="/empty-state.svg" 
+              alt="No data" 
+              width={200} 
+              height={200} 
+              className="mb-6 opacity-60"
             />
-          ))}
-        </div>
-      )}
-
-      {/* 添加/編輯表單模態框 */}
-      {(showAddForm || editingPerson) && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-gray-900 w-full h-full md:rounded-xl md:max-w-2xl md:h-auto md:max-h-[90vh] overflow-y-auto">
-            <DatePersonForm
-              initialData={editingPerson || undefined}
-              onSubmit={editingPerson ? handleUpdatePerson : handleAddPerson}
-              onCancel={() => {
-                setShowAddForm(false);
-                setEditingPerson(null);
-              }}
-              onDelete={editingPerson ? () => handleDeletePerson(editingPerson.id) : undefined}
-            />
+            <p className="text-lg mb-2">還沒有約會記錄</p>
+            <p className="mb-6">點擊右上角的「+」按鈕開始添加吧！</p>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary"
+            >
+              <FaPlus />
+              <span>新增約會對象</span>
+            </button>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredAndSortedPersons.map(person => (
+              <DatePersonCard
+                key={person.id}
+                person={person}
+                onClick={() => setEditingPerson(person)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {showAddForm && (
+        <DatePersonForm
+          onSubmit={handleAddPerson}
+          onCancel={handleCancelForm}
+        />
       )}
-
-      {/* 確認刪除對話框 */}
+      
+      {editingPerson && (
+        <DatePersonForm
+          initialData={editingPerson}
+          onSubmit={(data) => handleEditPerson(editingPerson.id, data)}
+          onCancel={handleCancelForm}
+          onDelete={() => handleDeletePerson(editingPerson.id)}
+        />
+      )}
+      
       <ConfirmDialog
         isOpen={showDeleteConfirm}
-        title="不暈了？"
-        message="恭喜你成功清醒，刪除後不能復原喔"
+        title="確認刪除"
+        message="確定要刪除這個約會對象嗎？此操作無法撤銷。"
+        confirmText="刪除"
+        cancelText="取消"
         onConfirm={confirmDelete}
-        onCancel={cancelDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
+      
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
+      
+      {renderSyncNotification()}
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { DatePerson, RELATIONSHIP_STATUS_COLORS } from '@/types';
 import { FaStar, FaInstagram, FaHeart, FaEye, FaCalendarCheck, FaSmile, FaHandHoldingHeart, FaRing, FaTimesCircle, FaCalendarAlt } from 'react-icons/fa';
+import { useState, useRef, useEffect } from 'react';
 
 interface DatePersonCardProps {
   person: DatePerson;
@@ -64,6 +65,17 @@ const DatePersonCard: React.FC<DatePersonCardProps> = ({ person, onClick }) => {
 
   const meetChannel = getMeetChannel();
   const randomColor = getRandomColor();
+
+  // 格式化日期
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('zh-TW', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+  };
+
+  const statusColor = RELATIONSHIP_STATUS_COLORS[person.relationshipStatus] || { bg: 'bg-gray-500/20', text: 'text-gray-400' };
 
   return (
     <div 

@@ -7,6 +7,8 @@ interface ConfirmDialogProps {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -14,7 +16,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   title,
   message,
   onConfirm,
-  onCancel
+  onCancel,
+  confirmText = '確認',
+  cancelText = '取消'
 }) => {
   if (!isOpen) return null;
 
@@ -38,13 +42,13 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             onClick={onCancel}
             className="px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
           >
-            取消
+            {cancelText}
           </button>
           <button
             onClick={onConfirm}
             className="btn-primary bg-error hover:bg-red-600"
           >
-            確認刪除
+            {confirmText}
           </button>
         </div>
       </div>

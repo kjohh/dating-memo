@@ -167,321 +167,327 @@ const DatePersonForm: React.FC<DatePersonFormProps> = ({
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full md:h-auto">
-      {/* 頂部導航列 */}
-      <div ref={headerRef} className="sticky top-0 z-10 bg-gray-900 p-4 border-b border-gray-800 flex items-center">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="p-2 text-gray-400 hover:text-white mr-3"
-          aria-label="返回"
-        >
-          <FaArrowLeft size={18} />
-        </button>
-        
-        <h2 className="text-xl font-bold gradient-text flex-1">
-          {initialData?.name ? `${initialData.name}` : '新增約會對象'}
-        </h2>
-        
-        {onDelete && (
-          <button
-            type="button"
-            onClick={onDelete}
-            className="p-2 text-error hover:text-red-600"
-            aria-label="刪除"
-          >
-            <FaTrash size={18} />
-          </button>
-        )}
-      </div>
-
-      {/* 標籤頁導航 */}
-      <div 
-        ref={tabsRef}
-        className={`flex bg-gray-900 border-b border-gray-800 ${isTabSticky ? 'sticky top-12 z-10' : ''}`}
-      >
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => handleTabChange(tab)}
-            className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors flex-1 ${
-              currentTab === tab 
-                ? 'text-primary border-b-2 border-primary -mb-px' 
-                : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            {getTabIcon(tab)}
-            <span>{tab}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* 標籤頁內容 */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-6">
-        {/* 基本資訊 */}
-        {currentTab === '基本' && (
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1">
-                姓名 <span className="text-error">*</span>
-              </label>
-              <input
-                id="name"
-                type="text"
-                {...register('name')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="請輸入姓名"
-              />
-              {errors.name && (
-                <p className="text-error text-sm mt-1">{errors.name.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="age" className="block text-sm font-medium mb-1">
-                年齡
-              </label>
-              <input
-                id="age"
-                type="number"
-                min="18"
-                {...register('age')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="請輸入年齡"
-              />
-              {errors.age && (
-                <p className="text-error text-sm mt-1">{errors.age.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                關係狀態
-              </label>
-              <select
-                value={watch('relationshipStatus')}
-                onChange={(e) => setValue('relationshipStatus', e.target.value as RelationshipStatus)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary text-gray-200"
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-70 overflow-y-auto">
+      <div className="min-h-screen flex flex-col md:items-center md:justify-center p-0 md:p-4">
+        <div className="w-full md:max-w-3xl bg-gray-900 md:rounded-lg shadow-xl">
+          <form ref={formRef} onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full md:h-auto">
+            {/* 頂部導航列 */}
+            <div ref={headerRef} className="sticky top-0 z-10 bg-gray-900 p-4 border-b border-gray-800 flex items-center md:rounded-t-lg">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="p-2 text-gray-400 hover:text-white mr-3"
+                aria-label="返回"
               >
-                {RELATIONSHIP_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-text mt-2">
-                {RELATIONSHIP_STATUS_DESCRIPTIONS[watch('relationshipStatus') as RelationshipStatus]}
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                生理性別
-              </label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setValue('gender', '男')}
-                  className={`flex-1 py-2 px-4 rounded-lg border ${
-                    gender === '男'
-                      ? 'btn-primary border-0'
-                      : 'bg-gray-800/70 border-gray-700'
-                  }`}
-                >
-                  男
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setValue('gender', '女')}
-                  className={`flex-1 py-2 px-4 rounded-lg border ${
-                    gender === '女'
-                      ? 'btn-primary border-0'
-                      : 'bg-gray-800/70 border-gray-700'
-                  }`}
-                >
-                  女
-                </button>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                評分
-              </label>
-              <StarRating
-                rating={(rating ? Number(rating) : 0) as any}
-                onChange={(value: any) => setValue('rating', value.toString())}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* 特質標籤 */}
-        {currentTab === '特質' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-2">優點</h3>
-              <TagSelector
-                availableTags={PRESET_POSITIVE_TAGS}
-                selectedTags={positiveTags}
-                onChange={(tags) => setValue('positiveTags', tags)}
-                tagClassName="bg-green-100 text-green-800"
-              />
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-2">缺點</h3>
-              <TagSelector
-                availableTags={PRESET_NEGATIVE_TAGS}
-                selectedTags={negativeTags}
-                onChange={(tags) => setValue('negativeTags', tags)}
-                tagClassName="bg-red-100 text-red-800"
-              />
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-2">性格特質</h3>
-              <TagSelector
-                availableTags={PRESET_PERSONALITY_TAGS}
-                selectedTags={personalityTags}
-                onChange={(tags) => setValue('personalityTags', tags)}
-                tagClassName="bg-blue-100 text-blue-800"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* 備註 */}
-        {currentTab === '備註' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                認識管道
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
-                {(['交友軟體', '社群媒體', '親友介紹', '工作關係', '其他'] as MeetChannel[]).map(channel => (
-                  <button
-                    key={channel}
-                    type="button"
-                    onClick={() => handleMeetChannelChange(channel)}
-                    className={`py-2 px-3 rounded-lg border text-sm ${
-                      meetChannel === channel
-                        ? 'btn-primary border-0'
-                        : 'bg-gray-800/70 border-gray-700'
-                    }`}
-                  >
-                    {channel}
-                  </button>
-                ))}
-              </div>
+                <FaArrowLeft size={18} />
+              </button>
               
-              {meetChannel === '其他' && (
-                <input
-                  type="text"
-                  value={otherChannel}
-                  onChange={(e) => handleOtherChannelChange(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary mt-2"
-                  placeholder="請輸入其他認識管道"
-                />
+              <h2 className="text-xl font-bold gradient-text flex-1">
+                {initialData?.name ? `${initialData.name}` : '新增約會對象'}
+              </h2>
+              
+              {initialData && (
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="p-2 text-error hover:text-red-600"
+                  aria-label="刪除"
+                >
+                  <FaTrash size={18} />
+                </button>
               )}
             </div>
 
-            <div>
-              <label htmlFor="occupation" className="block text-sm font-medium mb-1">
-                職業
-              </label>
-              <input
-                id="occupation"
-                type="text"
-                {...register('occupation')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="請輸入職業"
-              />
+            {/* 標籤頁導航 */}
+            <div 
+              ref={tabsRef}
+              className={`flex justify-around border-b border-gray-800 bg-gray-900 ${isTabSticky ? 'sticky top-[62px]' : ''} z-10`}
+            >
+              {tabs.map(tab => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => handleTabChange(tab)}
+                  className={`flex-1 flex items-center justify-center py-3 px-4 ${
+                    currentTab === tab
+                      ? 'text-accent border-b-2 border-accent font-medium'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span className="mr-2">{getTabIcon(tab)}</span>
+                  <span>{tab}</span>
+                </button>
+              ))}
             </div>
 
-            <div>
-              <label htmlFor="contactInfo" className="block text-sm font-medium mb-1">
-                社群帳號
-              </label>
-              <input
-                id="contactInfo"
-                type="text"
-                {...register('contactInfo')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="IG、FB、Line ID 等"
-              />
+            {/* 標籤頁內容 */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-6">
+              {/* 基本資訊 */}
+              {currentTab === '基本' && (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium mb-1">
+                      姓名 <span className="text-error">*</span>
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      {...register('name')}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="請輸入姓名"
+                    />
+                    {errors.name && (
+                      <p className="text-error text-sm mt-1">{errors.name.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="age" className="block text-sm font-medium mb-1">
+                      年齡
+                    </label>
+                    <input
+                      id="age"
+                      type="number"
+                      min="18"
+                      {...register('age')}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="請輸入年齡"
+                    />
+                    {errors.age && (
+                      <p className="text-error text-sm mt-1">{errors.age.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      關係狀態
+                    </label>
+                    <select
+                      value={watch('relationshipStatus')}
+                      onChange={(e) => setValue('relationshipStatus', e.target.value as RelationshipStatus)}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary text-gray-200"
+                    >
+                      {RELATIONSHIP_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-text mt-2">
+                      {RELATIONSHIP_STATUS_DESCRIPTIONS[watch('relationshipStatus') as RelationshipStatus]}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      生理性別
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setValue('gender', '男')}
+                        className={`flex-1 py-2 px-4 rounded-lg border ${
+                          gender === '男'
+                            ? 'btn-primary border-0'
+                            : 'bg-gray-800/70 border-gray-700'
+                        }`}
+                      >
+                        男
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValue('gender', '女')}
+                        className={`flex-1 py-2 px-4 rounded-lg border ${
+                          gender === '女'
+                            ? 'btn-primary border-0'
+                            : 'bg-gray-800/70 border-gray-700'
+                        }`}
+                      >
+                        女
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      評分
+                    </label>
+                    <StarRating
+                      rating={(rating ? Number(rating) : 0) as any}
+                      onChange={(value: any) => setValue('rating', value.toString())}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 特質標籤 */}
+              {currentTab === '特質' && (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">優點</h3>
+                    <TagSelector
+                      availableTags={PRESET_POSITIVE_TAGS}
+                      selectedTags={positiveTags}
+                      onChange={(tags) => setValue('positiveTags', tags)}
+                      tagClassName="bg-green-100 text-green-800"
+                    />
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">缺點</h3>
+                    <TagSelector
+                      availableTags={PRESET_NEGATIVE_TAGS}
+                      selectedTags={negativeTags}
+                      onChange={(tags) => setValue('negativeTags', tags)}
+                      tagClassName="bg-red-100 text-red-800"
+                    />
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">性格特質</h3>
+                    <TagSelector
+                      availableTags={PRESET_PERSONALITY_TAGS}
+                      selectedTags={personalityTags}
+                      onChange={(tags) => setValue('personalityTags', tags)}
+                      tagClassName="bg-blue-100 text-blue-800"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 備註 */}
+              {currentTab === '備註' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      認識管道
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+                      {(['交友軟體', '社群媒體', '親友介紹', '工作關係', '其他'] as MeetChannel[]).map(channel => (
+                        <button
+                          key={channel}
+                          type="button"
+                          onClick={() => handleMeetChannelChange(channel)}
+                          className={`py-2 px-3 rounded-lg border text-sm ${
+                            meetChannel === channel
+                              ? 'btn-primary border-0'
+                              : 'bg-gray-800/70 border-gray-700'
+                          }`}
+                        >
+                          {channel}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {meetChannel === '其他' && (
+                      <input
+                        type="text"
+                        value={otherChannel}
+                        onChange={(e) => handleOtherChannelChange(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary mt-2"
+                        placeholder="請輸入其他認識管道"
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="occupation" className="block text-sm font-medium mb-1">
+                      職業
+                    </label>
+                    <input
+                      id="occupation"
+                      type="text"
+                      {...register('occupation')}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="請輸入職業"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="contactInfo" className="block text-sm font-medium mb-1">
+                      社群帳號
+                    </label>
+                    <input
+                      id="contactInfo"
+                      type="text"
+                      {...register('contactInfo')}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="IG、FB、Line ID 等"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="instagramAccount" className="block text-sm font-medium mb-1">
+                      Instagram 帳號
+                    </label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-700 bg-gray-800 text-gray-400">
+                        instagram.com/
+                      </span>
+                      <input
+                        id="instagramAccount"
+                        type="text"
+                        {...register('instagramAccount')}
+                        className="flex-1 px-4 py-2 rounded-r-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="username"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-text mt-1">請輸入不含 @ 的用戶名，例如：username</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="firstDateAt" className="block text-sm font-medium mb-1">
+                      初次約會
+                    </label>
+                    <input
+                      id="firstDateAt"
+                      type="text"
+                      {...register('firstDateAt')}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="記錄初次約會的時間、地點或其他相關資訊..."
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="notes" className="block text-sm font-medium mb-1">
+                      備註
+                    </label>
+                    <textarea
+                      id="notes"
+                      {...register('notes')}
+                      rows={6}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="記錄你的印象、感受或其他重要資訊..."
+                    ></textarea>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div>
-              <label htmlFor="instagramAccount" className="block text-sm font-medium mb-1">
-                Instagram 帳號
-              </label>
-              <div className="flex">
-                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-700 bg-gray-800 text-gray-400">
-                  instagram.com/
-                </span>
-                <input
-                  id="instagramAccount"
-                  type="text"
-                  {...register('instagramAccount')}
-                  className="flex-1 px-4 py-2 rounded-r-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="username"
-                />
-              </div>
-              <p className="text-xs text-muted-text mt-1">請輸入不含 @ 的用戶名，例如：username</p>
+            {/* 底部按鈕區域 */}
+            <div className="sticky bottom-0 bg-gray-900 p-4 border-t border-gray-800 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                disabled={!isFormValid()}
+                className={`btn-primary ${
+                  !isFormValid() && 'opacity-50 cursor-not-allowed'
+                }`}
+              >
+                <FaCheck />
+                <span>儲存</span>
+              </button>
             </div>
-
-            <div>
-              <label htmlFor="firstDateAt" className="block text-sm font-medium mb-1">
-                初次約會
-              </label>
-              <input
-                id="firstDateAt"
-                type="text"
-                {...register('firstDateAt')}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="記錄初次約會的時間、地點或其他相關資訊..."
-              />
-            </div>
-
-            <div>
-              <label htmlFor="notes" className="block text-sm font-medium mb-1">
-                備註
-              </label>
-              <textarea
-                id="notes"
-                {...register('notes')}
-                rows={6}
-                className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="記錄你的印象、感受或其他重要資訊..."
-              ></textarea>
-            </div>
-          </div>
-        )}
+          </form>
+        </div>
       </div>
-
-      {/* 底部按鈕區域 */}
-      <div className="sticky bottom-0 bg-gray-900 p-4 border-t border-gray-800 flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
-        >
-          取消
-        </button>
-        <button
-          type="submit"
-          disabled={!isFormValid()}
-          className={`btn-primary ${
-            !isFormValid() && 'opacity-50 cursor-not-allowed'
-          }`}
-        >
-          <FaCheck />
-          <span>儲存</span>
-        </button>
-      </div>
-    </form>
+    </div>
   );
 };
 
