@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { FaPlus, FaHeart, FaSearch, FaSortAmountDown, FaSortAmountUp, FaCalendarAlt, FaFilter, FaEllipsisV, FaTimes, FaSpinner } from 'react-icons/fa';
 import { DatePerson, DatePersonForm as DatePersonFormData, RELATIONSHIP_STATUSES } from '@/types';
@@ -12,7 +12,7 @@ import Image from 'next/image';
 import LoginModal from '@/components/LoginModal';
 import UserMenu from '@/components/UserMenu';
 import { getCurrentUser } from '@/utils/supabase';
-import { migrateLocalDataToCloud, fetchCloudData, hasCloudData, mergeLocalAndCloudData } from '@/utils/storageSync';
+import { migrateLocalDataToCloud, fetchCloudData, hasCloudData, mergeLocalAndCloudData, addToCloud, updateInCloud, deleteFromCloud } from '@/utils/storageSync';
 
 export default function Home() {
   const [datePersons, setDatePersons] = useState<DatePerson[]>([]);
@@ -31,6 +31,7 @@ export default function Home() {
     show: boolean;
     type: 'success' | 'error' | 'info';
     message: string;
+    onConfirm?: () => void;
   }>({ show: false, type: 'info', message: '' });
   const [showSyncConfirm, setShowSyncConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,24 +100,25 @@ export default function Home() {
   }, []);
   
   const closeSyncMessage = () => {
-    setSyncMessage({ ...syncMessage, show: false });
+    setSyncMessage(prev => ({ ...prev, show: false }));
   };
   
-  const showSyncNotification = (type: 'success' | 'error' | 'info', message: string, onConfirm?: () => void) => {
+  const showSyncNotification = useCallback((type: 'success' | 'error' | 'info', message: string, onConfirm?: () => void) => {
     setSyncMessage({
       show: true,
       type,
       message,
+      onConfirm
     });
     
     if (type !== 'info') {
       setTimeout(() => {
-        closeSyncMessage();
+        setSyncMessage(prev => ({ ...prev, show: false }));
       }, 5000);
     }
-  };
+  }, []);
   
-  const loadCloudData = async (userId: string) => {
+  const loadCloudData = useCallback(async (userId: string) => {
     try {
       const { success, data, message } = await fetchCloudData(userId);
       
@@ -128,7 +130,57 @@ export default function Home() {
     } catch (error) {
       console.error('加載雲端數據出錯:', error);
     }
-  };
+  }, []);
+  
+  useEffect(() => {
+    const syncDataOnModeChange = async () => {
+      if (dataMode === 'cloud' && isLoggedIn) {
+        try {
+          console.log('檢測到模式切換為雲端模式');
+          const user = await getCurrentUser();
+          if (user) {
+            console.log('當前登入用戶:', user.id);
+            
+            // 檢查是否已有雲端數據
+            const hasCloud = await hasCloudData(user.id);
+            console.log('用戶是否有雲端數據:', hasCloud);
+            
+            if (!hasCloud && datePersons.length > 0) {
+              console.log('開始遷移本地數據到雲端:', datePersons.length, '條記錄');
+              
+              // 如果沒有雲端數據但有本地數據，自動同步
+              const result = await migrateLocalDataToCloud(user.id);
+              console.log('遷移結果:', result);
+              
+              if (result.success) {
+                showSyncNotification('success', `已自動同步 ${datePersons.length} 筆數據到雲端`);
+              } else {
+                console.error('遷移失敗:', result.message);
+                showSyncNotification('error', `自動同步失敗: ${result.message}`);
+              }
+            } else if (hasCloud) {
+              console.log('加載雲端數據');
+              // 如果已有雲端數據，加載雲端數據
+              const { data, success, message } = await fetchCloudData(user.id);
+              
+              if (success && data) {
+                console.log('成功加載雲端數據:', data.length, '條記錄');
+                setDatePersons(data);
+              } else {
+                console.error('加載雲端數據失敗:', message);
+                showSyncNotification('error', `加載雲端數據失敗: ${message}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('模式切換時同步數據錯誤:', error);
+          showSyncNotification('error', '模式切換時同步數據錯誤，請稍後再試');
+        }
+      }
+    };
+    
+    syncDataOnModeChange();
+  }, [dataMode, isLoggedIn, datePersons.length, showSyncNotification, loadCloudData]);
   
   const handleSyncData = async () => {
     try {
@@ -168,6 +220,9 @@ export default function Home() {
             showSyncNotification('error', message);
           }
         }
+      } else {
+        loadCloudData(user.id);
+        showSyncNotification('success', '已重新載入雲端數據');
       }
     } catch (error) {
       console.error('同步數據失敗:', error);
@@ -175,18 +230,48 @@ export default function Home() {
     }
   };
 
-  const handleAddPerson = (data: DatePersonFormData) => {
+  const handleAddPerson = async (data: DatePersonFormData) => {
     const newPerson = addDatePerson(data);
     setDatePersons([...datePersons, newPerson]);
     setShowAddForm(false);
+    
+    if (isLoggedIn && dataMode === 'cloud') {
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          const result = await addToCloud(newPerson, user.id);
+          if (!result.success) {
+            showSyncNotification('error', `自動同步失敗：${result.message}`);
+          }
+        }
+      } catch (error) {
+        console.error('自動同步新增數據失敗:', error);
+        showSyncNotification('error', '自動同步新增數據失敗，請稍後手動同步');
+      }
+    }
   };
   
-  const handleEditPerson = (id: string, data: DatePersonFormData) => {
+  const handleEditPerson = async (id: string, data: DatePersonFormData) => {
     const updatedPerson = updateDatePerson(id, data);
     if (updatedPerson) {
       setDatePersons(datePersons.map(person => person.id === id ? updatedPerson : person));
     }
     setEditingPerson(null);
+    
+    if (isLoggedIn && dataMode === 'cloud' && updatedPerson) {
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          const result = await updateInCloud(updatedPerson, user.id);
+          if (!result.success) {
+            showSyncNotification('error', `自動同步失敗：${result.message}`);
+          }
+        }
+      } catch (error) {
+        console.error('自動同步更新數據失敗:', error);
+        showSyncNotification('error', '自動同步更新數據失敗，請稍後手動同步');
+      }
+    }
   };
   
   const handleDeletePerson = (id: string) => {
@@ -194,11 +279,27 @@ export default function Home() {
     setShowDeleteConfirm(true);
   };
   
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (personToDelete) {
       deleteDatePerson(personToDelete);
       setDatePersons(datePersons.filter(person => person.id !== personToDelete));
       setShowDeleteConfirm(false);
+      
+      if (isLoggedIn && dataMode === 'cloud') {
+        try {
+          const user = await getCurrentUser();
+          if (user) {
+            const result = await deleteFromCloud(personToDelete, user.id);
+            if (!result.success) {
+              showSyncNotification('error', `自動同步失敗：${result.message}`);
+            }
+          }
+        } catch (error) {
+          console.error('自動同步刪除數據失敗:', error);
+          showSyncNotification('error', '自動同步刪除數據失敗，請稍後手動同步');
+        }
+      }
+      
       setPersonToDelete(null);
       setEditingPerson(null);
     }
@@ -330,7 +431,7 @@ export default function Home() {
           <button onClick={closeSyncMessage} className="ml-4 text-white">×</button>
         </div>
         
-        {syncMessage.type === 'info' && (
+        {syncMessage.type === 'info' && syncMessage.onConfirm && (
           <div className="mt-3 flex justify-end gap-2">
             <button 
               onClick={closeSyncMessage}
@@ -340,6 +441,9 @@ export default function Home() {
             </button>
             <button 
               onClick={() => {
+                if (syncMessage.onConfirm) {
+                  syncMessage.onConfirm();
+                }
                 closeSyncMessage();
               }}
               className="px-3 py-1 rounded-md bg-primary text-white text-sm"
@@ -368,29 +472,107 @@ export default function Home() {
     checkAndPromptSync();
   }, [datePersons.length]);
   
-  const confirmSync = async () => {
-    const user = await getCurrentUser();
-    
-    if (!user) return;
-    
+  const confirmSyncModeChange = async () => {
     try {
-      setIsLoading(true);
-      const result = await migrateLocalDataToCloud(user.id);
-      setShowSyncConfirm(false);
+      console.log('用戶確認同步並切換到雲端模式');
+      const user = await getCurrentUser();
       
-      if (result.success) {
-        showSyncNotification('success', result.message);
+      if (!user) {
+        console.error('無法獲取當前用戶');
+        return;
+      }
+      
+      setIsLoading(true);
+      
+      // 檢查用戶是否已有雲端數據
+      const hasCloud = await hasCloudData(user.id);
+      console.log('用戶是否有雲端數據:', hasCloud);
+      
+      if (hasCloud) {
+        console.log('發現雲端數據，準備合併');
+        // 如果有雲端數據，需要合併
+        const { success, data, message } = await mergeLocalAndCloudData(user.id);
+        
+        if (success) {
+          console.log('合併成功:', message);
+          // 更新本地顯示的數據
+          if (data) setDatePersons(data);
+          
+          // 切換到雲端模式
+          setDataMode('cloud');
+          localStorage.setItem('dataMode', 'cloud');
+          
+          showSyncNotification('success', message);
+        } else {
+          console.error('合併失敗:', message);
+          showSyncNotification('error', message);
+        }
       } else {
-        showSyncNotification('error', result.message);
+        console.log('無雲端數據，直接遷移本地數據');
+        // 如果沒有雲端數據，直接遷移
+        const result = await migrateLocalDataToCloud(user.id);
+        console.log('遷移結果:', result);
+        
+        if (result.success) {
+          // 切換到雲端模式
+          setDataMode('cloud');
+          localStorage.setItem('dataMode', 'cloud');
+          
+          showSyncNotification('success', result.message);
+        } else {
+          console.error('遷移失敗:', result.message);
+          showSyncNotification('error', result.message);
+        }
       }
     } catch (error) {
-      console.error('同步數據時出錯:', error);
+      console.error('確認同步模式變更時出錯:', error);
       showSyncNotification('error', '同步過程中發生錯誤，請稍後再試');
     } finally {
       setIsLoading(false);
+      setShowSyncConfirm(false);
     }
   };
-  
+
+  // 處理用戶登入事件
+  const handleUserLogin = useCallback(async () => {
+    try {
+      console.log('處理用戶登入事件');
+      const user = await getCurrentUser();
+      if (user) {
+        console.log('用戶已登入:', user.id);
+        setIsLoggedIn(true);
+        
+        // 檢查是否有雲端數據
+        const hasCloud = await hasCloudData(user.id);
+        console.log('用戶是否有雲端數據:', hasCloud);
+        
+        if (hasCloud) {
+          console.log('發現雲端數據，詢問是否切換模式');
+          // 如果有雲端數據，詢問是否切換到雲端模式
+          showSyncNotification('info', '發現雲端數據。是否要切換到雲端模式？', () => {
+            console.log('用戶確認切換到雲端模式');
+            setDataMode('cloud');
+            localStorage.setItem('dataMode', 'cloud');
+            loadCloudData(user.id);
+          });
+        } else if (datePersons.length > 0) {
+          console.log('發現本地數據，顯示同步確認對話框');
+          // 如果沒有雲端數據但有本地數據，詢問是否同步到雲端
+          setShowSyncConfirm(true);
+        }
+      }
+    } catch (error) {
+      console.error('處理用戶登入事件錯誤:', error);
+    }
+  }, [datePersons.length, loadCloudData, showSyncNotification]);
+
+  // 監視用戶登入狀態變化
+  useEffect(() => {
+    if (isLoggedIn) {
+      handleUserLogin();
+    }
+  }, [isLoggedIn, handleUserLogin]);
+
   return (
     <main className="min-h-screen text-white">
       <header className="sticky top-0 z-10 backdrop-blur-sm border-b border-gray-800/50 px-4 py-3">
@@ -505,7 +687,11 @@ export default function Home() {
       
       <LoginModal 
         isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
+        onClose={() => {
+          setShowLoginModal(false);
+          // 登入對話框關閉後，檢查登入狀態
+          handleUserLogin();
+        }} 
       />
       
       {renderSyncNotification()}
@@ -534,13 +720,14 @@ export default function Home() {
               <button
                 onClick={() => setShowSyncConfirm(false)}
                 className="flex-1 py-2 px-4 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+                disabled={isLoading}
               >
                 稍後再說
               </button>
               <button
-                onClick={confirmSync}
+                onClick={confirmSyncModeChange}
                 disabled={isLoading}
-                className="flex-1 bg-primary hover:bg-primary-dark text-black py-2 px-4 rounded-lg transition-colors disabled:opacity-70 flex items-center justify-center"
+                className="flex-1 bg-primary hover:bg-primary-dark text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-70 flex items-center justify-center"
               >
                 {isLoading ? (
                   <>

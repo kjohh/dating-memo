@@ -5,6 +5,94 @@ import { DatePerson } from '@/types';
 // 實際表名
 const TABLE_NAME = 'dating_persons';
 
+// 輔助函數：將本地資料格式化為雲端格式
+const formatForCloud = (person: DatePerson, userId: string) => {
+  return {
+    id: person.id,
+    user_id: userId,
+    name: person.name,
+    gender: person.gender,
+    meetChannel: person.meetChannel,
+    relationshipStatus: person.relationshipStatus,
+    positiveTags: person.positiveTags,
+    negativeTags: person.negativeTags,
+    personalityTags: person.personalityTags,
+    notes: person.notes,
+    age: person.age,
+    occupation: person.occupation,
+    contactInfo: person.contactInfo,
+    instagramAccount: person.instagramAccount,
+    rating: person.rating,
+    createdAt: person.createdAt.toISOString(),
+    updatedAt: person.updatedAt.toISOString(),
+    firstDateAt: person.firstDateAt || null
+  };
+};
+
+// 將一個新的約會對象添加到雲端
+export const addToCloud = async (person: DatePerson, userId: string) => {
+  try {
+    const formattedPerson = formatForCloud(person, userId);
+    
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .insert(formattedPerson);
+    
+    if (error) {
+      console.error('添加到雲端失敗:', error);
+      return { success: false, message: `添加失敗: ${error.message}` };
+    }
+    
+    return { success: true, message: '成功添加到雲端' };
+  } catch (error) {
+    console.error('添加到雲端出錯:', error);
+    return { success: false, message: '添加過程中發生錯誤' };
+  }
+};
+
+// 更新雲端中的約會對象
+export const updateInCloud = async (person: DatePerson, userId: string) => {
+  try {
+    const formattedPerson = formatForCloud(person, userId);
+    
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .upsert(formattedPerson)
+      .eq('id', person.id);
+    
+    if (error) {
+      console.error('更新雲端數據失敗:', error);
+      return { success: false, message: `更新失敗: ${error.message}` };
+    }
+    
+    return { success: true, message: '成功更新雲端數據' };
+  } catch (error) {
+    console.error('更新雲端數據出錯:', error);
+    return { success: false, message: '更新過程中發生錯誤' };
+  }
+};
+
+// 從雲端刪除約會對象
+export const deleteFromCloud = async (personId: string, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .delete()
+      .eq('id', personId)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('從雲端刪除失敗:', error);
+      return { success: false, message: `刪除失敗: ${error.message}` };
+    }
+    
+    return { success: true, message: '成功從雲端刪除' };
+  } catch (error) {
+    console.error('從雲端刪除出錯:', error);
+    return { success: false, message: '刪除過程中發生錯誤' };
+  }
+};
+
 // 將本地數據遷移到雲端
 export const migrateLocalDataToCloud = async (userId: string) => {
   try {
@@ -18,33 +106,7 @@ export const migrateLocalDataToCloud = async (userId: string) => {
     console.log('正在遷移本地數據到雲端:', localData.length, '條記錄');
     
     // 將本地數據格式轉換為 Supabase 格式，添加用戶 ID
-    const formattedData = localData.map(person => {
-      // 創建一個新對象以確保字段名稱與 Supabase 表結構一致
-      const formattedPerson = {
-        id: person.id,
-        user_id: userId,
-        name: person.name,
-        gender: person.gender,
-        meetChannel: person.meetChannel,
-        relationshipStatus: person.relationshipStatus,
-        positiveTags: person.positiveTags,
-        negativeTags: person.negativeTags,
-        personalityTags: person.personalityTags,
-        notes: person.notes,
-        age: person.age,
-        occupation: person.occupation,
-        contactInfo: person.contactInfo,
-        instagramAccount: person.instagramAccount,
-        rating: person.rating,
-        // 注意：使用駝峰式命名法而不是蛇形命名法
-        createdAt: person.createdAt.toISOString(),
-        updatedAt: person.updatedAt.toISOString(),
-        firstDateAt: person.firstDateAt || null
-      };
-      
-      console.log('格式化數據:', formattedPerson);
-      return formattedPerson;
-    });
+    const formattedData = localData.map(person => formatForCloud(person, userId));
     
     // 上傳數據到 Supabase
     const { error } = await supabase
@@ -130,75 +192,91 @@ export const hasCloudData = async (userId: string) => {
 
 // 合併本地和雲端數據（基於最後更新時間）
 export const mergeLocalAndCloudData = async (userId: string) => {
-  // 獲取本地數據
-  const localData = getAllDatePersons();
-  
-  // 獲取雲端數據
-  const { data: cloudData } = await fetchCloudData(userId);
-  
-  // 建立 ID 到數據的映射
-  const dataMap = new Map();
-  
-  // 先添加雲端數據
-  cloudData.forEach(item => {
-    dataMap.set(item.id, item);
-  });
-  
-  // 合併本地數據，如果本地更新時間較新則覆蓋
-  localData.forEach(item => {
-    const cloudItem = dataMap.get(item.id);
+  try {
+    console.log('開始合併本地和雲端數據');
     
-    // 如果雲端沒有此數據，或本地數據更新時間較新，則使用本地數據
-    if (!cloudItem || item.updatedAt > cloudItem.updatedAt) {
-      dataMap.set(item.id, item);
+    // 獲取本地數據
+    const localData = getAllDatePersons();
+    console.log('本地數據:', localData.length, '條記錄');
+    
+    // 獲取雲端數據
+    const { data: cloudData, success, message } = await fetchCloudData(userId);
+    
+    if (!success || !cloudData) {
+      console.error('獲取雲端數據失敗:', message);
+      return { success: false, message: `無法獲取雲端數據: ${message}` };
     }
-  });
-  
-  // 將合併結果轉換為數組
-  const mergedData = Array.from(dataMap.values());
-  
-  // 準備用於上傳的數據
-  const uploadData = mergedData.map(item => ({
-    id: item.id,
-    user_id: userId,
-    name: item.name,
-    gender: item.gender,
-    meetChannel: item.meetChannel,
-    relationshipStatus: item.relationshipStatus,
-    positiveTags: item.positiveTags,
-    negativeTags: item.negativeTags,
-    personalityTags: item.personalityTags,
-    notes: item.notes,
-    age: item.age,
-    occupation: item.occupation,
-    contactInfo: item.contactInfo,
-    instagramAccount: item.instagramAccount,
-    rating: item.rating,
-    // 使用駝峰式命名法的字段
-    createdAt: item.createdAt.toISOString(),
-    updatedAt: item.updatedAt.toISOString(),
-    firstDateAt: item.firstDateAt || null
-  }));
-  
-  // 清空現有雲端數據
-  await supabase
-    .from(TABLE_NAME)
-    .delete()
-    .eq('user_id', userId);
-  
-  // 上傳合併後的數據
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .insert(uploadData);
-  
-  if (error) {
-    console.error('合併數據到雲端失敗:', error);
-    return { success: false, message: `合併失敗: ${error.message}` };
+    
+    console.log('雲端數據:', cloudData.length, '條記錄');
+    
+    // 建立 ID 到數據的映射
+    const dataMap = new Map();
+    
+    // 先添加雲端數據
+    cloudData.forEach(item => {
+      dataMap.set(item.id, item);
+    });
+    
+    console.log('處理本地數據...');
+    
+    // 合併本地數據，如果本地更新時間較新則覆蓋
+    localData.forEach(item => {
+      const cloudItem = dataMap.get(item.id);
+      
+      // 如果雲端沒有此數據，或本地數據更新時間較新，則使用本地數據
+      if (!cloudItem) {
+        console.log(`添加本地數據到合併結果 (ID: ${item.id})`);
+        dataMap.set(item.id, item);
+      } else if (item.updatedAt > cloudItem.updatedAt) {
+        console.log(`用本地數據更新雲端數據 (ID: ${item.id})`);
+        dataMap.set(item.id, item);
+      } else {
+        console.log(`保留雲端數據 (ID: ${item.id})`);
+      }
+    });
+    
+    // 將合併結果轉換為數組
+    const mergedData = Array.from(dataMap.values());
+    console.log('合併後的數據總數:', mergedData.length);
+    
+    // 準備用於上傳的數據
+    console.log('格式化數據用於上傳...');
+    const uploadData = mergedData.map(item => formatForCloud(item, userId));
+    
+    console.log('刪除當前用戶的所有雲端數據...');
+    // 清空現有雲端數據
+    const { error: deleteError } = await supabase
+      .from(TABLE_NAME)
+      .delete()
+      .eq('user_id', userId);
+    
+    if (deleteError) {
+      console.error('刪除舊數據失敗:', deleteError);
+      return { success: false, message: `刪除舊數據失敗: ${deleteError.message}` };
+    }
+    
+    console.log('上傳合併後的數據...');
+    // 上傳合併後的數據
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .insert(uploadData);
+    
+    if (error) {
+      console.error('合併數據到雲端失敗:', error);
+      return { success: false, message: `合併失敗: ${error.message}` };
+    }
+    
+    console.log('數據合併並上傳成功');
+    return { 
+      success: true, 
+      data: mergedData,
+      message: `成功合併 ${mergedData.length} 筆數據`
+    };
+  } catch (error) {
+    console.error('合併數據過程中出錯:', error);
+    return { 
+      success: false, 
+      message: '合併過程中發生錯誤，請稍後再試'
+    };
   }
-  
-  return { 
-    success: true, 
-    data: mergedData,
-    message: `成功合併 ${mergedData.length} 筆數據`
-  };
 }; 
