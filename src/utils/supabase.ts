@@ -7,7 +7,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 // 檢查環境變量是否已設置
 if (!supabaseUrl || !supabaseAnonKey) {
   if (typeof window !== 'undefined') {
-    console.warn('Supabase環境變量未設置。請確保已設置NEXT_PUBLIC_SUPABASE_URL和NEXT_PUBLIC_SUPABASE_ANON_KEY。');
+    // 不輸出警告到控制台
   }
 }
 
@@ -31,7 +31,7 @@ export const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     return user;
   } catch (error) {
-    console.error('獲取當前用戶失敗:', error);
+    // 處理錯誤但不輸出到控制台
     return null;
   }
 };
@@ -50,7 +50,7 @@ export const signInWithEmail = async (email: string) => {
       },
     });
   } catch (error) {
-    console.error('發送登入鏈接失敗:', error);
+    // 處理錯誤但不輸出到控制台
     return { error };
   }
 };
@@ -60,7 +60,7 @@ export const signOut = async () => {
   try {
     return await supabase.auth.signOut();
   } catch (error) {
-    console.error('登出失敗:', error);
+    // 處理錯誤但不輸出到控制台
     return { error };
   }
 };
@@ -74,7 +74,7 @@ export const getSession = async () => {
     const { data, error } = await supabase.auth.getSession();
     return { session: data.session, error };
   } catch (error) {
-    console.error('獲取會話失敗:', error);
+    // 處理錯誤但不輸出到控制台
     return { session: null, error };
   }
 }; 

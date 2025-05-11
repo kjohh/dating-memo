@@ -60,7 +60,6 @@ export default function Home() {
             if (storedDataMode === 'cloud') {
               setDataMode('cloud');
               loadCloudData(user.id).catch(err => {
-                console.error('加載雲端數據失敗:', err);
                 // 如果雲端數據加載失敗，回退到本地模式
                 setDataMode('local');
                 localStorage.setItem('dataMode', 'local');
@@ -73,7 +72,7 @@ export default function Home() {
                 setDataMode('cloud');
                 localStorage.setItem('dataMode', 'cloud');
                 loadCloudData(user.id).catch(err => {
-                  console.error('加載雲端數據失敗:', err);
+                  // 如果雲端數據加載失敗，回退到本地模式
                   setDataMode('local');
                   localStorage.setItem('dataMode', 'local');
                   showSyncNotification('error', '無法連接雲端，已切換到本地模式');
@@ -85,14 +84,12 @@ export default function Home() {
               setDataMode('local');
             }
           } catch (cloudError) {
-            console.error('檢查雲端數據時出錯:', cloudError);
             // 如果無法檢查雲端數據，默認使用本地模式
             setDataMode('local');
             localStorage.setItem('dataMode', 'local');
           }
         }
       } catch (error) {
-        console.error('檢查登入狀態失敗:', error);
         // 在登入檢查失敗時，確保使用本地模式
         setDataMode('local');
         localStorage.setItem('dataMode', 'local');
@@ -151,19 +148,34 @@ export default function Home() {
     }
   }, []);
   
-  const loadCloudData = useCallback(async (userId: string) => {
+  const loadCloudData = async (userId: string, silent = false) => {
+    if (!silent) {
+      showSyncNotification('info', '正在載入雲端數據...');
+    }
+    
     try {
-      const { success, data, message } = await fetchCloudData(userId);
+      // 從雲端載入數據
+      const { data, success, message } = await fetchCloudData(userId);
       
       if (success && data) {
         setDatePersons(data);
+        if (!silent) {
+          showSyncNotification('success', `成功從雲端載入 ${data.length} 筆數據`);
+        }
+        return { success: true };
       } else {
-        console.error('加載雲端數據失敗:', message);
+        if (!silent) {
+          showSyncNotification('error', `加載雲端數據失敗: ${message}`);
+        }
+        return { success: false, error: message };
       }
     } catch (error) {
-      console.error('加載雲端數據出錯:', error);
+      if (!silent) {
+        showSyncNotification('error', '加載雲端數據時出錯');
+      }
+      return { success: false, error: '加載過程中出錯' };
     }
-  }, []);
+  };
   
   useEffect(() => {
     const syncDataOnModeChange = async () => {
@@ -247,52 +259,109 @@ export default function Home() {
         showSyncNotification('success', '已重新載入雲端數據');
       }
     } catch (error) {
-      console.error('同步數據失敗:', error);
       showSyncNotification('error', '同步數據失敗，請稍後再試');
     }
   };
 
   const handleAddPerson = async (data: DatePersonFormData) => {
-    const newPerson = addDatePerson(data);
-    setDatePersons([...datePersons, newPerson]);
-    setShowAddForm(false);
-    
-    if (isLoggedIn && dataMode === 'cloud') {
-      try {
-        const user = await getCurrentUser();
-        if (user) {
-          const result = await addToCloud(newPerson, user.id);
-          if (!result.success) {
-            showSyncNotification('error', `自動同步失敗：${result.message}`);
+    try {
+      // 在本地添加記錄
+      const newPerson = addDatePerson(data);
+      
+      // 更新UI狀態
+      setDatePersons(prevPersons => [...prevPersons, newPerson]);
+      setShowAddForm(false);
+      
+      // 檢查是否需要同步到雲端
+      if (isLoggedIn && dataMode === 'cloud') {
+        showSyncNotification('info', '正在同步到雲端...');
+        setIsLoading(true);
+        
+        try {
+          const user = await getCurrentUser();
+          
+          if (user) {
+            // 嘗試添加到雲端
+            const result = await addToCloud(newPerson, user.id);
+            
+            if (result.success) {
+              // 雲端添加成功
+              showSyncNotification('success', '新增記錄已同步到雲端');
+              
+              // 從雲端重新獲取最新數據，確保本地與雲端一致
+              setTimeout(() => {
+                loadCloudData(user.id, true);
+              }, 800); // 增加延遲，確保雲端數據已更新
+            } else {
+              // 雲端添加失敗
+              showSyncNotification('error', `自動同步失敗：${result.message}`);
+            }
           }
+        } catch (error) {
+          showSyncNotification('error', '自動同步新增數據失敗，請稍後手動同步');
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('自動同步新增數據失敗:', error);
-        showSyncNotification('error', '自動同步新增數據失敗，請稍後手動同步');
+      } else {
+        // 在本地模式下顯示成功訊息
+        showSyncNotification('success', '資料已成功添加');
       }
+    } catch (error) {
+      showSyncNotification('error', '處理添加時發生錯誤');
     }
   };
   
   const handleEditPerson = async (id: string, data: DatePersonFormData) => {
-    const updatedPerson = updateDatePerson(id, data);
-    if (updatedPerson) {
-      setDatePersons(datePersons.map(person => person.id === id ? updatedPerson : person));
-    }
-    setEditingPerson(null);
-    
-    if (isLoggedIn && dataMode === 'cloud' && updatedPerson) {
-      try {
-        const user = await getCurrentUser();
-        if (user) {
-          const result = await updateInCloud(updatedPerson, user.id);
-          if (!result.success) {
-            showSyncNotification('error', `自動同步失敗：${result.message}`);
-          }
-        }
-      } catch (error) {
-        console.error('自動同步更新數據失敗:', error);
-        showSyncNotification('error', '自動同步更新數據失敗，請稍後手動同步');
+    try {
+      // 首先在本地更新數據
+      const updatedPerson = updateDatePerson(id, data);
+      if (!updatedPerson) {
+        showSyncNotification('error', '更新失敗：找不到指定的記錄');
+        return;
       }
+
+      // 更新本地狀態
+      setDatePersons(prevPersons => prevPersons.map(person => 
+        person.id === id ? updatedPerson : person
+      ));
+      setEditingPerson(null);
+      
+      // 檢查是否需要同步到雲端
+      if (isLoggedIn && dataMode === 'cloud') {
+        showSyncNotification('info', '正在同步更改到雲端...');
+        setIsLoading(true);
+        
+        try {
+          const user = await getCurrentUser();
+          
+          if (user) {
+            // 嘗試更新雲端數據
+            const result = await updateInCloud(updatedPerson, user.id);
+            
+            if (result.success) {
+              // 雲端更新成功
+              showSyncNotification('success', '更新已同步到雲端');
+              
+              // 從雲端重新獲取最新數據，確保本地與雲端一致
+              setTimeout(() => {
+                loadCloudData(user.id, true);
+              }, 800); // 增加延遲，確保雲端數據已更新
+            } else {
+              // 雲端更新失敗
+              showSyncNotification('error', `自動同步失敗：${result.message}`);
+            }
+          }
+        } catch (error) {
+          showSyncNotification('error', '自動同步更新數據失敗，請稍後手動同步');
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // 在本地模式下顯示成功訊息
+        showSyncNotification('success', '資料已成功更新');
+      }
+    } catch (error) {
+      showSyncNotification('error', '處理更新時發生錯誤');
     }
   };
   
@@ -303,27 +372,58 @@ export default function Home() {
 
   const confirmDelete = async () => {
     if (personToDelete) {
-      deleteDatePerson(personToDelete);
-      setDatePersons(datePersons.filter(person => person.id !== personToDelete));
-      setShowDeleteConfirm(false);
-      
-      if (isLoggedIn && dataMode === 'cloud') {
-        try {
-          const user = await getCurrentUser();
-          if (user) {
-            const result = await deleteFromCloud(personToDelete, user.id);
-            if (!result.success) {
-              showSyncNotification('error', `自動同步失敗：${result.message}`);
-            }
-          }
-        } catch (error) {
-          console.error('自動同步刪除數據失敗:', error);
-          showSyncNotification('error', '自動同步刪除數據失敗，請稍後手動同步');
+      try {
+        // 本地刪除
+        const success = deleteDatePerson(personToDelete);
+        if (!success) {
+          showSyncNotification('error', '刪除失敗：找不到指定的記錄');
+          return;
         }
+        
+        // 更新UI狀態
+        setDatePersons(prevPersons => prevPersons.filter(person => person.id !== personToDelete));
+        setShowDeleteConfirm(false);
+        
+        // 檢查是否需要同步到雲端
+        if (isLoggedIn && dataMode === 'cloud') {
+          showSyncNotification('info', '正在同步到雲端...');
+          setIsLoading(true);
+          
+          try {
+            const user = await getCurrentUser();
+            
+            if (user) {
+              // 嘗試從雲端刪除
+              const result = await deleteFromCloud(personToDelete, user.id);
+              
+              if (result.success) {
+                // 雲端刪除成功
+                showSyncNotification('success', '刪除操作已同步到雲端');
+                
+                // 從雲端重新獲取最新數據，確保本地與雲端一致
+                setTimeout(() => {
+                  loadCloudData(user.id, true);
+                }, 800); // 增加延遲，確保雲端數據已更新
+              } else {
+                // 雲端刪除失敗
+                showSyncNotification('error', `自動同步失敗：${result.message}`);
+              }
+            }
+          } catch (error) {
+            showSyncNotification('error', '自動同步刪除數據失敗，請稍後手動同步');
+          } finally {
+            setIsLoading(false);
+          }
+        } else {
+          // 在本地模式下顯示成功訊息
+          showSyncNotification('success', '記錄已成功刪除');
+        }
+        
+        setPersonToDelete(null);
+        setEditingPerson(null);
+      } catch (error) {
+        showSyncNotification('error', '處理刪除時發生錯誤');
       }
-      
-      setPersonToDelete(null);
-      setEditingPerson(null);
     }
   };
   
@@ -480,19 +580,31 @@ export default function Home() {
   
   useEffect(() => {
     const checkAndPromptSync = async () => {
-      const user = await getCurrentUser();
-      if (user && datePersons.length > 0) {
-        const hasCloudDataResult = await hasCloudData(user.id);
-        
-        if (!hasCloudDataResult) {
-          console.log('檢測到登入用戶有本地數據但無雲端數據，顯示同步提示');
-          setShowSyncConfirm(true);
+      // 如果用戶已登入且使用本地數據模式
+      if (isLoggedIn && dataMode === 'local') {
+        try {
+          const user = await getCurrentUser();
+          if (!user) return;
+          
+          // 檢查本地是否有數據
+          const hasLocalData = datePersons.length > 0;
+          
+          // 檢查雲端是否已有數據
+          const hasCloud = await hasCloudData(user.id);
+          
+          // 如果本地有數據但雲端沒有，提示同步
+          if (hasLocalData && !hasCloud) {
+            // 檢測到登入用戶有本地數據但無雲端數據，顯示同步提示
+            setShowSyncConfirm(true);
+          }
+        } catch (error) {
+          // 處理錯誤
         }
       }
     };
     
     checkAndPromptSync();
-  }, [datePersons.length]);
+  }, [datePersons.length, isLoggedIn, dataMode]);
   
   const confirmSyncModeChange = async () => {
     try {
@@ -538,7 +650,6 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error('同步過程中出錯:', error);
       showSyncNotification('error', '同步過程中發生錯誤，請稍後再試');
     } finally {
       setIsLoading(false);
@@ -546,7 +657,7 @@ export default function Home() {
     }
   };
 
-  // 處理用戶登入事件
+  // 修改用戶登入事件處理函數
   const handleUserLogin = useCallback(async () => {
     try {
       const user = await getCurrentUser();
@@ -580,10 +691,10 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error('處理用戶登入事件失敗:', error);
+      // 處理錯誤但不輸出到控制台
     }
-  }, [datePersons.length, loadCloudData, showSyncNotification]);
-
+  }, [datePersons.length, loadCloudData, showSyncNotification, hasCloudData]);
+  
   // 監視用戶登入狀態變化
   useEffect(() => {
     if (isLoggedIn) {
@@ -600,6 +711,48 @@ export default function Home() {
       }
     };
   }, [syncMessage.show]);
+
+  // 添加定期自動同步機制
+  useEffect(() => {
+    // 只有當用戶登入且使用雲端模式時啟用自動同步
+    if (isLoggedIn && dataMode === 'cloud') {
+      // 自動同步間隔（毫秒）
+      const syncIntervalTime = 5 * 60 * 1000; // 5分鐘
+      
+      // 啟用自動同步機制
+      
+      // 定義同步函數
+      const syncNow = async () => {
+        try {
+          // 執行自動同步...
+          const user = await getCurrentUser();
+          if (user) {
+            await loadCloudData(user.id, true); // 靜默加載，不顯示通知
+          }
+        } catch (error) {
+          // 自動同步失敗處理
+        }
+      };
+      
+      // 設置定時器，定期同步
+      const intervalId = setInterval(syncNow, syncIntervalTime);
+      
+      // 監聽窗口獲得焦點事件，在用戶回到頁面時同步
+      const handleFocus = () => {
+        // 頁面獲得焦點，執行同步
+        syncNow();
+      };
+      
+      window.addEventListener('focus', handleFocus);
+      
+      // 清理函數
+      return () => {
+        // 停止自動同步
+        clearInterval(intervalId);
+        window.removeEventListener('focus', handleFocus);
+      };
+    }
+  }, [isLoggedIn, dataMode]);
 
   return (
     <main className="min-h-screen text-white">

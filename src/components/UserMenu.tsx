@@ -25,7 +25,7 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
         const currentUser = await getCurrentUser();
         setUser(currentUser);
       } catch (error) {
-        console.error('獲取用戶信息失敗:', error);
+        // 處理錯誤但不輸出到控制台
       } finally {
         setLoading(false);
       }
@@ -56,7 +56,7 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
       setIsMenuOpen(false);
       // 可能需要執行一些清理操作，例如切換回本地存儲模式
     } catch (error) {
-      console.error('登出失敗:', error);
+      // 處理錯誤但不輸出到控制台
     }
   };
   

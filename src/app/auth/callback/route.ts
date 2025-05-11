@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
                 // @ts-ignore - 忽略TypeScript錯誤，cookies API在運行時應該工作正常
                 return cookieStore.get(name)?.value;
               } catch (error) {
-                console.error(`獲取cookie ${name}時出錯:`, error);
                 return undefined;
               }
             },
@@ -34,7 +33,7 @@ export async function GET(request: NextRequest) {
                 // @ts-ignore - 忽略TypeScript錯誤，cookies API在運行時應該工作正常
                 cookieStore.set({ name, value, ...options });
               } catch (error) {
-                console.error(`設置cookie ${name}時出錯:`, error);
+                // 處理錯誤但不輸出到控制台
               }
             },
             remove(name: string, options: any) {
@@ -42,7 +41,7 @@ export async function GET(request: NextRequest) {
                 // @ts-ignore - 忽略TypeScript錯誤，cookies API在運行時應該工作正常
                 cookieStore.set({ name, value: '', ...options, maxAge: 0 });
               } catch (error) {
-                console.error(`移除cookie ${name}時出錯:`, error);
+                // 處理錯誤但不輸出到控制台
               }
             },
           },
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
       // 交換授權碼以獲取會話
       await supabase.auth.exchangeCodeForSession(code);
     } catch (error) {
-      console.error('處理授權回調時出錯:', error);
+      // 處理錯誤但不輸出到控制台
     }
   }
   
