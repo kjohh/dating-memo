@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FaUser, FaSignOutAlt, FaUserCircle, FaCloudUploadAlt, FaCloud, FaDesktop } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaUserCircle, FaCloudUploadAlt, FaCloud } from 'react-icons/fa';
 import { getCurrentUser, signOut } from '@/utils/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -92,7 +92,7 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
       >
         <div className="p-4 border-b border-gray-800">
           <div className="text-sm text-gray-400">已登入為</div>
-          <div className="font-medium truncate">{user.email}</div>
+          <div className="font-medium truncate">{user?.email}</div>
         </div>
         
         <div className="p-2">
@@ -100,28 +100,9 @@ const UserMenu = ({ onLoginClick, onSyncData, dataMode }: UserMenuProps) => {
             onClick={onSyncData}
             className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors"
           >
-            {dataMode === 'local' ? (
-              <>
-                <FaCloudUploadAlt size={16} className="text-primary" />
-                <span>同步數據到雲端</span>
-              </>
-            ) : (
-              <>
-                <FaCloud size={16} className="text-primary" />
-                <span>同步狀態: 已啟用</span>
-              </>
-            )}
+            <FaCloud size={16} className="text-primary" />
+            <span>同步數據</span>
           </button>
-          
-          {dataMode === 'cloud' && (
-            <button
-              onClick={() => {}} // 這裡可以添加切換到本地模式的功能
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 rounded-md transition-colors"
-            >
-              <FaDesktop size={16} />
-              <span>切換到本地模式</span>
-            </button>
-          )}
           
           <button
             onClick={handleLogout}
